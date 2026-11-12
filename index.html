@@ -1,0 +1,2199 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-aurora">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>GS PYQ & Mock Pro 1.0 — MPSC Group B Test Simulator</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GS Mock Pro" />
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', 'Noto Sans Devanagari', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button { touch-action: manipulation; cursor: pointer; user-select: none; }
+
+    /* 60FPS ZERO-LAG SOLID THEMES */
+    html.theme-aurora {
+      --bg-main: #090d16; --bg-panel: #111827; --bg-sub: #0b1120; --bg-muted: #1e293b;
+      --border-col: rgba(99, 102, 241, 0.28); --text-main: #f8fafc; --text-sub: #94a3b8; --accent: #6366f1;
+    }
+    html.theme-daylight {
+      --bg-main: #eef2f6; --bg-panel: #ffffff; --bg-sub: #f8fafc; --bg-muted: #e2e8f0;
+      --border-col: #cbd5e1; --text-main: #0f172a; --text-sub: #475569; --accent: #4f46e5;
+    }
+    html.theme-matcha {
+      --bg-main: #eae3d2; --bg-panel: #fdfbf7; --bg-sub: #f3ede0; --bg-muted: #e5dec9;
+      --border-col: rgba(74, 107, 83, 0.28); --text-main: #2c2520; --text-sub: #6e6259; --accent: #4a6b53;
+    }
+
+    body { background: var(--bg-main); color: var(--text-main); min-height: 100vh; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+    .panel-box { background: var(--bg-panel); border: 1px solid var(--border-col); }
+    .sub-box { background: var(--bg-sub); border: 1px solid var(--border-col); }
+    .btn-soft { background: var(--bg-muted); color: var(--text-main); border: 1px solid var(--border-col); }
+    .text-main { color: var(--text-main); }
+    .text-sub { color: var(--text-sub); }
+    .btn-accent { background: var(--accent); color: #ffffff !important; }
+
+    /* Interactive Statement Toggler */
+    .stmt-line {
+      padding: 6px 10px; border-radius: 10px; border: 1px dashed rgba(148, 163, 184, 0.25);
+      margin: 4px 0; cursor: pointer; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+      transition: background 0.12s;
+    }
+    .stmt-line.stmt-true { background: rgba(16, 185, 129, 0.16); border: 1px solid rgba(16, 185, 129, 0.5); }
+    .stmt-line.stmt-false { background: rgba(244, 63, 94, 0.16); border: 1px solid rgba(244, 63, 94, 0.5); text-decoration: line-through; opacity: 0.85; }
+
+    /* Trap Word Highlighter */
+    .trap-word {
+      background: rgba(244, 63, 94, 0.25); color: #fb7185;
+      border-bottom: 2px solid #f43f5e; padding: 0 4px; border-radius: 4px; font-weight: 800;
+    }
+
+    /* Eliminated Option Strike-through */
+    .opt-eliminated .opt-text { text-decoration: line-through; opacity: 0.42; }
+
+    /* A4 Printable Layout */
+    #a4PrintContainer { display: none; }
+    @media print {
+      body > *:not(#a4PrintContainer) { display: none !important; }
+      body { background: #ffffff !important; color: #000000 !important; padding: 0 !important; margin: 0 !important; }
+      #a4PrintContainer { display: block !important; width: 100%; padding: 7mm; background: #fff; color: #000; }
+      .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .print-q { border: 1px solid #334155; border-radius: 6px; padding: 7px 9px; break-inside: avoid; page-break-inside: avoid; font-size: 10px; line-height: 1.35; }
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+  <!-- ==================== A4 PRINT CONTAINER ==================== -->
+  <div id="a4PrintContainer">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:10px;">
+      <div>
+        <h1 id="printHeaderTitle" style="font-size:15px; font-weight:800; margin:0;">GS PYQ & Mock Pro — A4 Revision Sheet</h1>
+        <p id="printHeaderSub" style="font-size:10px; margin:2px 0 0 0; color:#334155;"></p>
+      </div>
+      <span style="font-size:10px; font-weight:700;">MPSC Group B (STI · PSI · SR)</span>
+    </div>
+    <div id="printGridBody" class="print-grid"></div>
+  </div>
+
+  <!-- ==================== TOP BAR ==================== -->
+  <header class="sticky top-0 z-30 panel-box border-b px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden px-3 py-2 rounded-xl btn-soft text-xs font-bold flex items-center gap-1.5">
+        <span>📁</span> <span>Syllabus</span>
+      </button>
+      <div class="w-9 h-9 rounded-2xl btn-accent flex items-center justify-center font-extrabold text-sm shadow">GS</div>
+      <div class="hidden sm:block">
+        <span class="font-extrabold text-base tracking-tight text-main">GS Mock Pro</span>
+        <span class="ml-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold">⚡ v1.0 Simulator</span>
+      </div>
+    </div>
+
+    <!-- Live Session Score Pill -->
+    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-extrabold">
+      <span>🎯 Session:</span>
+      <span id="sessionStatsPill">0 Solved · 0% Acc · 0.00 Net</span>
+      <button type="button" onclick="resetSessionStats()" class="ml-1 text-[10px] underline opacity-80">Reset</button>
+    </div>
+
+    <!-- Debounced PYQ Radar Search -->
+    <div class="flex-1 max-w-xs mx-1 relative">
+      <input id="pyqSearchInput" type="text" placeholder="🔍 Search PYQs, Articles, Reformers..." class="w-full sub-box rounded-xl px-3.5 py-2 text-xs sm:text-sm text-main font-semibold outline-none focus:ring-2 focus:ring-indigo-500" />
+      <button type="button" id="clearSearchBtn" onclick="clearPyqSearch()" class="hidden absolute right-2.5 top-2 text-xs text-sub font-extrabold">✕</button>
+    </div>
+
+    <div class="flex items-center gap-1.5">
+      <button type="button" onclick="printCurrentScopeA4()" class="hidden sm:inline-flex px-2.5 py-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-extrabold" title="Print 2-Column A4 Sheet">🖨️ A4</button>
+      <button type="button" onclick="cycleTheme()" id="themeToggleBtn" class="px-2.5 py-2 rounded-xl btn-soft text-xs font-bold">🌌 Aurora</button>
+      <button type="button" onclick="openModal('aiModal')" class="px-2.5 py-2 rounded-xl bg-violet-500/20 text-violet-400 border border-violet-500/30 text-xs font-bold">✨ AI Key</button>
+      <button type="button" onclick="openAiGenModal(activeFolderId)" class="px-2.5 py-2 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white text-xs font-extrabold">✨ AI PYQs</button>
+      <button type="button" onclick="openModal('backupModal')" class="px-2.5 py-2 rounded-xl btn-soft text-xs font-bold">💾</button>
+      <button type="button" onclick="openQuestionModal(null, activeFolderId)" class="px-3.5 py-2 rounded-xl btn-accent text-xs font-extrabold shadow">+ Add MCQ</button>
+    </div>
+  </header>
+
+  <!-- MOBILE DRAWER -->
+  <div id="mobileSidebarBackdrop" onclick="closeMobileSidebar()" class="fixed inset-0 z-40 bg-black/70 hidden lg:hidden"></div>
+  <div id="mobileSidebarDrawer" class="fixed inset-y-0 left-0 z-50 w-80 max-w-[86vw] panel-box border-r p-4 overflow-y-auto transform -translate-x-full transition-transform duration-200 lg:hidden">
+    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-500/20">
+      <span class="font-extrabold text-sm text-main">🏛️ MPSC GS Syllabus Tree</span>
+      <button type="button" onclick="closeMobileSidebar()" class="px-2.5 py-1 rounded-lg btn-soft text-xs font-bold">✕</button>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <button type="button" onclick="openFolderModal(null)" class="py-2 rounded-xl btn-accent text-xs font-extrabold">+ Main Subject</button>
+      <button type="button" onclick="openFolderModal(activeFolderId)" class="py-2 rounded-xl btn-soft text-xs font-bold">+ Chapter Folder</button>
+    </div>
+    <div id="mobileFolderTree" class="space-y-1.5"></div>
+  </div>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <div class="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1">
+
+    <!-- LEFT SIDEBAR: COLLAPSIBLE SUBJECT -> CHAPTER TREE + ERROR BOOK VAULT -->
+    <aside class="hidden lg:block lg:col-span-4 xl:col-span-3 space-y-4">
+
+      <!-- Smart Error Book & Memory Vulnerability Vault -->
+      <div class="panel-box rounded-3xl p-4 space-y-2.5 shadow">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-extrabold uppercase tracking-wider text-sub">📕 Error Book & Vault</h2>
+          <button type="button" onclick="setSpecialFilter('')" id="btnResetVault" class="hidden text-[10px] text-indigo-400 font-extrabold hover:underline">✕ Back to Chapter</button>
+        </div>
+
+        <button type="button" onclick="setSpecialFilter(specialFilter==='errors'?'':'errors')" id="vaultBtnErrors" class="w-full p-2.5 rounded-2xl bg-rose-500/15 border border-rose-500/35 flex items-center justify-between text-xs font-extrabold text-rose-400 hover:bg-rose-500/25 transition">
+          <span>📕 Smart Error Book (Wrong PYQs)</span>
+          <span id="vaultCntErrors" class="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[11px]">0</span>
+        </button>
+
+        <div class="grid grid-cols-2 gap-1.5 text-center">
+          <button type="button" onclick="setSpecialFilter(specialFilter==='Confused'?'':'Confused')" id="vaultBtnConfused" class="p-2 rounded-2xl sub-box hover:border-amber-500/50 transition">
+            <span id="vaultCntConfused" class="text-sm font-extrabold text-amber-400 block">0</span>
+            <span class="text-[10px] font-bold text-sub">⚡ Often Confused</span>
+          </button>
+          <button type="button" onclick="setSpecialFilter(specialFilter==='Forget'?'':'Forget')" id="vaultBtnForget" class="p-2 rounded-2xl sub-box hover:border-rose-500/50 transition">
+            <span id="vaultCntForget" class="text-sm font-extrabold text-rose-400 block">0</span>
+            <span class="text-[10px] font-bold text-sub">🧠 Usually Forget</span>
+          </button>
+          <button type="button" onclick="setSpecialFilter(specialFilter==='Must'?'':'Must')" id="vaultBtnMust" class="p-2 rounded-2xl sub-box hover:border-emerald-500/50 transition">
+            <span id="vaultCntMust" class="text-sm font-extrabold text-emerald-400 block">0</span>
+            <span class="text-[10px] font-bold text-sub">🔥 Must Remember</span>
+          </button>
+          <button type="button" onclick="setSpecialFilter(specialFilter==='guesses'?'':'guesses')" id="vaultBtnGuesses" class="p-2 rounded-2xl sub-box hover:border-sky-500/50 transition">
+            <span id="vaultCntGuesses" class="text-sm font-extrabold text-sky-400 block">0</span>
+            <span class="text-[10px] font-bold text-sub">🎲 50-50 Guesses</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Collapsible Subject -> Subfolder -> Chapter Tree -->
+      <div class="panel-box rounded-3xl p-4 shadow">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-xs font-extrabold uppercase tracking-wider text-sub">🏛️ GS Subject Folders</h2>
+          <span class="text-[10px] text-sub font-semibold">Tap Subject to expand</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <button type="button" onclick="openFolderModal(null)" class="py-2 rounded-xl btn-accent text-xs font-extrabold">+ Main Subject</button>
+          <button type="button" onclick="openFolderModal(activeFolderId)" class="py-2 rounded-xl btn-soft text-xs font-bold">+ Sub/Chapter</button>
+        </div>
+        <div id="desktopFolderTree" class="space-y-1.5 max-h-[26rem] overflow-y-auto pr-1"></div>
+      </div>
+    </aside>
+
+    <!-- RIGHT MAIN EXAM ARENA -->
+    <main class="lg:col-span-8 xl:col-span-9 space-y-4">
+
+      <!-- Chapter Header & Simulator Mode Bar -->
+      <div class="panel-box rounded-3xl p-4 sm:p-5 space-y-3 shadow">
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <div id="folderBreadcrumb" class="flex flex-wrap items-center gap-1.5 text-xs font-bold text-indigo-400"></div>
+            <div class="flex items-center gap-2 mt-1 flex-wrap">
+              <h1 id="activeFolderTitle" class="text-xl sm:text-2xl font-extrabold text-main">Subject Chapter</h1>
+              <span id="activeFolderCount" class="text-xs px-2.5 py-0.5 rounded-full btn-soft font-extrabold">0 MCQs</span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" onclick="openQuestionModal(null, activeFolderId)" class="px-3 py-1.5 rounded-xl btn-accent text-xs font-extrabold shadow">📋 + 1-Paste MCQ</button>
+            <button type="button" onclick="openBulkModal(activeFolderId)" class="px-2.5 py-1.5 rounded-xl btn-soft text-indigo-400 text-xs font-extrabold">📥 Bulk Paste Quiz</button>
+            <button type="button" onclick="openFolderModal(activeFolderId)" class="px-2.5 py-1.5 rounded-xl btn-soft text-xs font-bold">+ Chapter</button>
+            <button type="button" onclick="openRenameFolderModal()" class="px-2.5 py-1.5 rounded-xl btn-soft text-xs font-semibold">✎</button>
+            <button type="button" onclick="deleteActiveFolder()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/15 text-rose-500 border border-rose-500/30 text-xs font-bold">🗑</button>
+          </div>
+        </div>
+
+        <!-- Subfolder / Chapter Quick Pills -->
+        <div id="subfolderPillsContainer" class="hidden pt-2 border-t border-slate-500/20">
+          <div class="flex items-center gap-1.5 flex-wrap" id="subfolderPillsList"></div>
+        </div>
+
+        <!-- Efficiency Toggles & Filter Strip -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-500/20 text-xs">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <label class="flex items-center gap-1 cursor-pointer text-sub font-semibold mr-1">
+              <input type="checkbox" id="includeSubfoldersToggle" checked onchange="toggleIncludeSubfolders()" class="rounded w-3.5 h-3.5 accent-indigo-600" />
+              <span>Include Sub-Chapters</span>
+            </label>
+            <button type="button" onclick="toggleTrapHighlighter()" id="btnTrapHighlight" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 font-extrabold">🚨 Trap Highlight: ON</button>
+            <button type="button" onclick="toggleShuffleOptions()" id="btnShuffleOpts" class="px-2.5 py-1 rounded-lg btn-soft font-bold">🔀 Shuffle A/B/C/D</button>
+            <button type="button" onclick="toggleHideOptions()" id="btnHideOpts" class="px-2.5 py-1 rounded-lg btn-soft font-bold">🙈 Hide Options</button>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="resetCurrentChapterAttempts()" class="px-2.5 py-1 rounded-lg btn-soft text-amber-400 font-extrabold" title="Clear selected answers to re-attempt this chapter fresh">↻ Re-Attempt Chapter</button>
+          </div>
+        </div>
+
+        <!-- 3 Simulator Mode Tabs -->
+        <div class="grid grid-cols-3 gap-2 pt-1">
+          <button type="button" onclick="setSimulatorMode('practice')" id="tab-practice" class="py-2.5 px-3 rounded-2xl text-xs font-extrabold border transition">⚡ Instant Practice Simulator</button>
+          <button type="button" onclick="setSimulatorMode('omr')" id="tab-omr" class="py-2.5 px-3 rounded-2xl text-xs font-extrabold border transition">🏛️ Full OMR Timed Mock</button>
+          <button type="button" onclick="setSimulatorMode('list')" id="tab-list" class="py-2.5 px-3 rounded-2xl text-xs font-extrabold border transition">📋 Question Bank & Manager</button>
+        </div>
+      </div>
+
+      <!-- EMPTY CHAPTER LAUNCHPAD -->
+      <section id="emptyFolderLaunchpad" class="hidden panel-box rounded-3xl p-6 sm:p-8 text-center space-y-5 shadow">
+        <div class="w-14 h-14 rounded-2xl btn-accent mx-auto flex items-center justify-center text-2xl shadow">🏛️</div>
+        <div class="space-y-1">
+          <h2 id="emptyFolderNameTitle" class="text-lg sm:text-xl font-extrabold text-main">This Chapter Has No Questions Yet!</h2>
+          <p class="text-xs text-sub max-w-md mx-auto">Add MPSC PYQs or chapter mock questions in seconds:</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto">
+          <button type="button" onclick="openQuestionModal(null, activeFolderId)" class="p-4 rounded-2xl btn-accent font-extrabold text-xs sm:text-sm shadow flex flex-col items-center gap-1.5">
+            <span class="text-xl">📋</span><span>1-Paste Single MCQ</span>
+          </button>
+          <button type="button" onclick="openBulkModal(activeFolderId)" class="p-4 rounded-2xl sub-box font-extrabold text-xs sm:text-sm text-main flex flex-col items-center gap-1.5">
+            <span class="text-xl">📥</span><span>Paste 20+ Quiz Block</span>
+          </button>
+          <button type="button" onclick="openAiGenModal(activeFolderId)" class="p-4 rounded-2xl bg-gradient-to-br from-fuchsia-600 to-violet-600 text-white font-extrabold text-xs sm:text-sm shadow flex flex-col items-center gap-1.5">
+            <span class="text-xl">✨</span><span>AI Generate Chapter PYQs</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ==================== TESTBOOK / ADDA247 SIMULATOR ARENA ==================== -->
+      <section id="view-simulator" class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+
+        <!-- LEFT 8 COLS: QUESTION STEM, RADIO OPTIONS & EXPLANATION DRAWER -->
+        <div class="xl:col-span-8 space-y-3.5">
+          <div class="panel-box rounded-3xl p-4 sm:p-6 space-y-4 shadow">
+
+            <!-- Question Top Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-500/20 text-xs">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span id="qNumberBadge" class="px-3 py-1 rounded-xl btn-accent font-extrabold text-xs sm:text-sm">Q. 1 / 1</span>
+                <span id="qChapterBadge" class="px-2.5 py-0.5 rounded-full btn-soft font-bold text-[11px]">Chapter</span>
+                <span id="qExamTagBadge" class="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold text-[11px]">MPSC PYQ</span>
+                <span id="qMistakeStreakBadge" class="hidden px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-extrabold text-[10px]">🚨 Missed 1x</span>
+              </div>
+
+              <div class="flex items-center gap-1.5">
+                <span class="px-2.5 py-1 rounded-lg sub-box font-mono font-bold text-[11px]">⏱ <strong id="qStopwatchDisplay">00s</strong></span>
+                <button type="button" onclick="toggleMarkForReview()" id="btnMarkReview" class="px-2.5 py-1 rounded-lg btn-soft font-extrabold text-[11px]">🚩 Review</button>
+                <button type="button" onclick="editCurrentQuestion()" class="px-2 py-1 rounded-lg btn-soft text-xs font-bold" title="Edit Question">✎</button>
+              </div>
+            </div>
+
+            <!-- Question Stem (Supports Interactive Statement [✓/✕] Toggling!) -->
+            <div class="space-y-2">
+              <div id="qInteractiveHint" class="hidden text-[11px] font-bold text-indigo-400">💡 Multi-Statement Tip: Tap any numbered statement below to mark it ✓ True or ✕ False before choosing your code!</div>
+              <div id="qStemContainer" class="text-sm sm:text-base font-bold text-main leading-relaxed whitespace-pre-line"></div>
+            </div>
+
+            <!-- Confidence Selector Bar (100% Sure vs 50-50 Guess) -->
+            <div class="flex items-center justify-between flex-wrap gap-2 pt-1 text-xs">
+              <span class="text-[11px] font-bold text-sub">Confidence Level:</span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="setQuestionConfidence('sure')" id="btnConfSure" class="px-2.5 py-1 rounded-lg btn-soft font-extrabold text-[11px]">🎯 100% Sure</button>
+                <button type="button" onclick="setQuestionConfidence('guess')" id="btnConfGuess" class="px-2.5 py-1 rounded-lg btn-soft font-extrabold text-[11px]">🎲 50-50 Guess</button>
+              </div>
+            </div>
+
+            <!-- Hide-Options Direct Recall Cover -->
+            <div id="hiddenOptionsCover" class="hidden p-5 rounded-2xl sub-box text-center space-y-2">
+              <p class="text-xs text-sub font-bold">🙈 Options are hidden for Direct Brain Recall! Think of the exact answer first.</p>
+              <button type="button" onclick="revealHiddenOptionsOnce()" class="px-4 py-2 rounded-xl btn-accent text-xs font-extrabold shadow">👀 Show 4 Options Now</button>
+            </div>
+
+            <!-- 4 Clickable Radio-Button Options (A, B, C, D) + [✕] Elimination Button -->
+            <div id="qOptionsContainer" class="space-y-2.5 pt-1"></div>
+
+            <!-- Navigation & "View Explanation" Action Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-500/20">
+              <button type="button" onclick="prevQuestion()" class="px-4 py-2.5 rounded-xl btn-soft text-xs font-extrabold">← Prev</button>
+
+              <div class="flex items-center gap-2">
+                <button type="button" id="btnToggleExplanation" onclick="toggleExplanationDrawer()" class="px-4 py-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40 text-xs font-extrabold">
+                  💡 View Explanation
+                </button>
+                <button type="button" id="btnSubmitOmrTest" onclick="submitFullOmrMock()" class="hidden px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold shadow">
+                  ✅ Submit Mock Test
+                </button>
+              </div>
+
+              <button type="button" onclick="nextQuestion()" class="px-5 py-2.5 rounded-xl btn-accent text-xs font-extrabold shadow">Next Question →</button>
+            </div>
+
+            <!-- 1-Tap Memory Vulnerability Bar (Often Confused / Usually Forget / Must Remember) -->
+            <div class="pt-2 border-t border-slate-500/20 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span class="text-[11px] font-extrabold text-sub uppercase">📌 Memory Tag:</span>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" id="qTagBtn-Confused" onclick="toggleCurrentQuestionTag('Confused')" class="px-3 py-1.5 rounded-xl btn-soft font-extrabold text-xs">⚡ Often Confused</button>
+                <button type="button" id="qTagBtn-Forget" onclick="toggleCurrentQuestionTag('Forget')" class="px-3 py-1.5 rounded-xl btn-soft font-extrabold text-xs">🧠 Usually Forget</button>
+                <button type="button" id="qTagBtn-Must" onclick="toggleCurrentQuestionTag('Must')" class="px-3 py-1.5 rounded-xl btn-soft font-extrabold text-xs">🔥 Must Remember</button>
+              </div>
+            </div>
+
+            <!-- COLLAPSIBLE EXPLANATION & PERSONAL STICKY NOTE DRAWER -->
+            <div id="qExplanationDrawer" class="hidden p-4 rounded-2xl sub-box border-emerald-500/40 space-y-3 text-xs sm:text-sm">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-500/20 pb-2">
+                <div id="qVerdictBanner" class="font-extrabold text-emerald-400">✅ Correct Answer: Option A</div>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="openStickyNotePrompt()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-extrabold">📝 + Sticky Note</button>
+                  <button type="button" onclick="aiExplainCurrentQuestion()" class="px-2.5 py-1 rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30 text-[11px] font-extrabold">✨ AI Deep Explain</button>
+                  <button type="button" onclick="aiTwistCurrentQuestion()" class="px-2.5 py-1 rounded-lg bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/30 text-[11px] font-extrabold">🔄 Twist PYQ</button>
+                </div>
+              </div>
+
+              <div id="qExplanationText" class="text-main leading-relaxed whitespace-pre-line font-medium"></div>
+
+              <!-- Personal Sticky Note Pin -->
+              <div id="qStickyNoteBox" class="hidden p-3 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold"></div>
+
+              <!-- Related Same-Topic PYQs in Database -->
+              <div id="qRelatedPyqsBox" class="hidden pt-2 border-t border-slate-500/20 space-y-1"></div>
+
+              <!-- AI Dynamic Output Box -->
+              <div id="qAiOutputBox" class="hidden p-3 rounded-xl panel-box border-violet-500/40 text-xs whitespace-pre-line"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT 4 COLS: LIVE OMR QUESTION PALETTE & SCORECARD -->
+        <div class="xl:col-span-4 space-y-4">
+          <div class="panel-box rounded-3xl p-4 space-y-3.5 shadow">
+            <div class="flex items-center justify-between border-b border-slate-500/20 pb-2.5">
+              <div>
+                <h3 class="text-xs font-extrabold uppercase tracking-wider text-sub">🎛️ Live OMR Question Palette</h3>
+                <p id="omrModeLabel" class="text-[11px] font-bold text-indigo-400">⚡ Instant Practice Mode</p>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-sub font-bold block">Total Time</span>
+                <span id="totalMockTimerDisplay" class="font-mono text-sm font-extrabold text-main">00:00</span>
+              </div>
+            </div>
+
+            <!-- Live Score & Negative Marking Summary -->
+            <div class="grid grid-cols-4 gap-1.5 text-center text-[11px]">
+              <div class="p-2 rounded-xl sub-box">
+                <span id="palCntCorrect" class="text-sm font-extrabold text-emerald-400 block">0</span>
+                <span class="text-[10px] text-sub font-bold">✅ Right</span>
+              </div>
+              <div class="p-2 rounded-xl sub-box">
+                <span id="palCntWrong" class="text-sm font-extrabold text-rose-400 block">0</span>
+                <span class="text-[10px] text-sub font-bold">❌ Wrong</span>
+              </div>
+              <div class="p-2 rounded-xl sub-box">
+                <span id="palCntSkipped" class="text-sm font-extrabold text-slate-400 block">0</span>
+                <span class="text-[10px] text-sub font-bold">⚪ Left</span>
+              </div>
+              <div class="p-2 rounded-xl sub-box">
+                <span id="palNetScore" class="text-sm font-extrabold text-amber-400 block">0.00</span>
+                <span class="text-[10px] text-sub font-bold">Net (-0.25)</span>
+              </div>
+            </div>
+
+            <!-- Numbered OMR Grid -->
+            <div id="omrPaletteGrid" class="grid grid-cols-5 sm:grid-cols-8 xl:grid-cols-5 gap-1.5 max-h-64 overflow-y-auto pr-1"></div>
+
+            <!-- Legend -->
+            <div class="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-500/20 text-[10px] font-bold text-sub">
+              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-600 inline-block"></span> Correct / Answered</div>
+              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-rose-600 inline-block"></span> Wrong (-0.25)</div>
+              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-purple-600 inline-block"></span> 🚩 Marked Review</div>
+              <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-slate-700 inline-block"></span> Not Attempted</div>
+            </div>
+          </div>
+
+          <!-- OMR Final Result Card (Appears when OMR Mock is Submitted) -->
+          <div id="omrScorecardPanel" class="hidden panel-box rounded-3xl p-4 border-emerald-500/40 space-y-2.5 shadow">
+            <h3 class="text-sm font-extrabold text-emerald-400">🏆 MPSC Mock Scorecard</h3>
+            <p id="omrScorecardSummary" class="text-xs font-bold text-main leading-relaxed"></p>
+            <p id="omrTimeTrapSummary" class="text-[11px] text-amber-400 font-semibold"></p>
+            <button type="button" onclick="setSpecialFilter('errors')" class="w-full py-2 rounded-xl bg-rose-600 text-white text-xs font-extrabold shadow">📕 Review Wrong Questions in Error Book</button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==================== VIEW 2: QUESTION BANK LIST & MANAGER ==================== -->
+      <section id="view-list" class="hidden panel-box rounded-3xl p-4 sm:p-5 space-y-3 shadow">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="selectAllQuestionsCheck" onchange="toggleSelectAllQuestions(this.checked)" class="rounded w-4 h-4 accent-indigo-600" />
+            <h2 class="text-xs font-extrabold uppercase tracking-wider text-sub">Questions in Scope (<span id="questionTableCount">0</span>)</h2>
+          </div>
+          <button type="button" onclick="openQuestionModal(null, activeFolderId)" class="px-3 py-1.5 rounded-xl btn-accent text-xs font-extrabold">+ Add Question Here</button>
+        </div>
+
+        <div id="bulkActionToolbar" class="hidden p-3 rounded-2xl sub-box flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span class="font-extrabold text-indigo-400"><span id="selectedQuestionsCount">0</span> selected</span>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="bulkMoveTargetSelect" class="btn-soft rounded-xl px-2.5 py-1.5 text-xs font-bold"></select>
+            <button type="button" onclick="moveSelectedQuestionsToFolder()" class="px-3 py-1.5 rounded-xl btn-accent font-extrabold">📁 Move Here</button>
+            <button type="button" onclick="deleteSelectedQuestions()" class="px-3 py-1.5 rounded-xl bg-rose-600 text-white font-extrabold">🗑 Delete</button>
+          </div>
+        </div>
+
+        <div id="questionBankList" class="space-y-2"></div>
+        <div id="loadMoreQuestionsWrap" class="hidden pt-2 text-center">
+          <button type="button" onclick="loadMoreBankQuestions()" id="btnLoadMoreQuestions" class="px-5 py-2 rounded-xl btn-soft text-xs font-extrabold">⬇ Show More Questions</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+  <!-- ADD / EDIT MCQ MODAL (WITH 1-PASTE MAGIC AUTO-SPLITTER) -->
+  <div id="questionModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto">
+    <div class="panel-box rounded-3xl max-w-xl w-full p-4 sm:p-5 space-y-3 my-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <h3 id="questionModalTitle" class="text-base font-extrabold text-main">Add GS Mock Question</h3>
+          <span id="qSavedToast" class="hidden text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-extrabold">✓ Saved! Paste next MCQ</span>
+        </div>
+        <button type="button" onclick="closeModal('questionModal')" class="text-sub font-bold text-base px-2">✕</button>
+      </div>
+      <input type="hidden" id="editQuestionId" />
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[11px] font-bold text-sub mb-1">Target Subject / Chapter Folder</label>
+          <select id="inputQFolderSelect" class="w-full btn-soft rounded-xl p-2 text-xs font-extrabold"></select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-indigo-400 mb-1">Exam Source Badge (Optional)</label>
+          <input id="inputQExamTag" type="text" class="w-full sub-box rounded-xl p-2 text-xs font-bold text-main outline-none" placeholder="e.g., STI Prelims 2023 / PYQ" />
+        </div>
+      </div>
+
+      <!-- 1-PASTE MAGIC MCQ SPLITTER -->
+      <div class="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/35 space-y-2">
+        <div class="flex items-center justify-between flex-wrap gap-1.5">
+          <span class="text-xs font-extrabold text-indigo-300">⚡ 1-Paste Magic MCQ Auto-Splitter</span>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="copyGsAiPromptTemplate()" class="px-2 py-1 rounded-lg btn-soft text-[10px] font-extrabold">🤖 Copy AI Prompt</button>
+            <button type="button" onclick="pasteFromClipboardIntoMcqMagic()" class="px-2.5 py-1 rounded-lg btn-accent text-[11px] font-extrabold shadow">📋 1-Tap Paste & Split</button>
+          </div>
+        </div>
+        <textarea id="magicMcqPasteInput" rows="2" oninput="handleMagicMcqPaste(this.value)" class="w-full sub-box rounded-xl p-2 text-xs text-main font-mono outline-none" placeholder="Paste full Question + Options A, B, C, D + Ans + Exp here — it auto-fills all boxes below!"></textarea>
+        <div id="magicMcqFeedback" class="hidden text-[11px] font-extrabold text-emerald-400"></div>
+      </div>
+
+      <!-- Duplicate Question Alert -->
+      <div id="dupQuestionBanner" class="hidden p-2.5 rounded-xl bg-rose-500/20 border border-rose-500/50 flex items-center justify-between text-xs">
+        <span id="dupQuestionText" class="font-extrabold text-rose-300">🚨 Same question already exists!</span>
+        <button type="button" id="btnLoadDupQuestion" class="px-2.5 py-1 rounded-lg bg-white text-slate-950 font-extrabold text-[11px]">Open Existing</button>
+      </div>
+
+      <!-- Question Stem -->
+      <div>
+        <label class="block text-xs font-extrabold text-main mb-1">Question Stem (Supports Multi-Statements 1, 2, a, b)</label>
+        <textarea id="inputQStem" rows="3" oninput="checkDuplicateQuestion(this.value)" class="w-full sub-box rounded-xl p-2.5 text-xs sm:text-sm text-main font-bold outline-none" placeholder="Type or paste full question here..."></textarea>
+      </div>
+
+      <!-- 4 Options + Correct Option Radio -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div>
+          <label class="flex items-center justify-between text-[11px] font-extrabold text-main mb-1">
+            <span>Option (A)</span>
+            <label class="flex items-center gap-1 text-emerald-400 cursor-pointer"><input type="radio" name="correctOptRadio" value="0" checked /> Correct</label>
+          </label>
+          <input id="inputOptA" type="text" class="w-full sub-box rounded-xl p-2 text-xs font-semibold text-main outline-none" placeholder="Option A..." />
+        </div>
+        <div>
+          <label class="flex items-center justify-between text-[11px] font-extrabold text-main mb-1">
+            <span>Option (B)</span>
+            <label class="flex items-center gap-1 text-emerald-400 cursor-pointer"><input type="radio" name="correctOptRadio" value="1" /> Correct</label>
+          </label>
+          <input id="inputOptB" type="text" class="w-full sub-box rounded-xl p-2 text-xs font-semibold text-main outline-none" placeholder="Option B..." />
+        </div>
+        <div>
+          <label class="flex items-center justify-between text-[11px] font-extrabold text-main mb-1">
+            <span>Option (C)</span>
+            <label class="flex items-center gap-1 text-emerald-400 cursor-pointer"><input type="radio" name="correctOptRadio" value="2" /> Correct</label>
+          </label>
+          <input id="inputOptC" type="text" class="w-full sub-box rounded-xl p-2 text-xs font-semibold text-main outline-none" placeholder="Option C..." />
+        </div>
+        <div>
+          <label class="flex items-center justify-between text-[11px] font-extrabold text-main mb-1">
+            <span>Option (D)</span>
+            <label class="flex items-center gap-1 text-emerald-400 cursor-pointer"><input type="radio" name="correctOptRadio" value="3" /> Correct</label>
+          </label>
+          <input id="inputOptD" type="text" class="w-full sub-box rounded-xl p-2 text-xs font-semibold text-main outline-none" placeholder="Option D..." />
+        </div>
+      </div>
+
+      <!-- Explanation & Personal Note -->
+      <div>
+        <label class="block text-xs font-extrabold text-emerald-400 mb-1">Detailed Explanation (Shown when "View Explanation" is clicked)</label>
+        <textarea id="inputQExp" rows="2" class="w-full sub-box rounded-xl p-2.5 text-xs text-main font-semibold outline-none" placeholder="Core explanation, dates, articles, or why other options are wrong..."></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[11px] font-extrabold text-amber-400 mb-1">📝 Personal Sticky Note / Trick (Optional)</label>
+          <input id="inputQNote" type="text" class="w-full sub-box rounded-xl p-2 text-xs font-bold text-main outline-none" placeholder="Your shortcut or mnemonic..." />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-sub mb-1">Memory Tag</label>
+          <div class="grid grid-cols-3 gap-1">
+            <button type="button" onclick="toggleModalMemoryTag('Confused')" id="mTag-Confused" class="py-1.5 rounded-xl btn-soft text-[10px] font-extrabold">⚡ Confused</button>
+            <button type="button" onclick="toggleModalMemoryTag('Forget')" id="mTag-Forget" class="py-1.5 rounded-xl btn-soft text-[10px] font-extrabold">🧠 Forget</button>
+            <button type="button" onclick="toggleModalMemoryTag('Must')" id="mTag-Must" class="py-1.5 rounded-xl btn-soft text-[10px] font-extrabold">🔥 Must</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <button type="button" onclick="closeModal('questionModal')" class="px-3.5 py-2 rounded-xl btn-soft text-xs font-bold">Cancel</button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="saveQuestionModal(true)" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-extrabold shadow">⚡ Save & Add Next</button>
+          <button type="button" onclick="saveQuestionModal(false)" class="px-5 py-2 rounded-xl btn-accent text-xs font-extrabold shadow">Save Question</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BULK QUIZ IMPORTER MODAL -->
+  <div id="bulkModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="panel-box rounded-3xl max-w-xl w-full p-5 space-y-3 my-6 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-main">📥 Multi-Question Quiz Block Importer</h3>
+        <button type="button" onclick="closeModal('bulkModal')" class="text-sub font-bold">✕</button>
+      </div>
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex-1 min-w-[180px]">
+          <label class="block text-xs font-bold text-sub mb-1">Save Questions Into Chapter:</label>
+          <select id="bulkTargetFolderSelect" class="w-full btn-soft rounded-xl p-2 text-xs font-extrabold"></select>
+        </div>
+        <button type="button" onclick="copyGsAiPromptTemplate()" class="mt-4 px-3 py-2 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-xs font-extrabold">
+          🤖 Copy AI Quiz Prompt
+        </button>
+      </div>
+      <p class="text-[11px] text-sub">Paste multiple questions separated by <code>---</code> on its own line:</p>
+      <textarea id="bulkImportText" rows="7" oninput="previewBulkMcqCount()" class="w-full sub-box rounded-xl p-3 text-xs font-mono text-main outline-none" placeholder="Q: Who founded the Satyashodhak Samaj in 1873?&#10;A) Dr. B.R. Ambedkar&#10;B) Mahatma Jyotirao Phule&#10;C) Rajarshi Shahu Maharaj&#10;D) Maharshi Vitthal Ramji Shinde&#10;Ans: B&#10;Exp: Founded on 24 Sept 1873 in Pune.&#10;---&#10;Q: Next question..."></textarea>
+      <div id="bulkPreviewBanner" class="hidden p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs font-extrabold text-emerald-400"></div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModal('bulkModal')" class="px-4 py-2 rounded-xl btn-soft text-xs font-bold">Cancel</button>
+        <button type="button" onclick="processBulkMcqImport()" class="px-5 py-2 rounded-xl btn-accent text-xs font-extrabold shadow">Import All MCQs</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOLDER MODAL -->
+  <div id="folderModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
+    <div class="panel-box rounded-3xl max-w-md w-full p-5 space-y-3 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 id="folderModalTitle" class="text-base font-extrabold text-main">Subject / Chapter Folder</h3>
+        <button type="button" onclick="closeModal('folderModal')" class="text-sub font-bold">✕</button>
+      </div>
+      <input type="hidden" id="folderParentIdInput" />
+      <input type="hidden" id="folderEditModeInput" />
+      <div id="folderParentNotice" class="text-xs text-indigo-400 font-bold p-2.5 rounded-xl bg-indigo-500/10"></div>
+      <div class="flex gap-2">
+        <select id="inputFolderIcon" class="btn-soft rounded-xl px-2.5 py-2.5 text-base">
+          <option value="📜">📜</option><option value="🌍">🌍</option><option value="⚖️">⚖️</option>
+          <option value="📈">📈</option><option value="🔬">🔬</option><option value="⚡">⚡</option>
+          <option value="⚗️">⚗️</option><option value="🌿">🌿</option><option value="📂">📂</option>
+        </select>
+        <input id="inputFolderName" type="text" class="flex-1 sub-box rounded-xl p-2.5 text-sm font-bold text-main outline-none" placeholder="e.g., 1857 Revolt, Fundamental Rights, Rivers of MH" />
+      </div>
+      <div class="flex justify-end gap-2 pt-1">
+        <button type="button" onclick="closeModal('folderModal')" class="px-4 py-2 rounded-xl btn-soft text-xs font-bold">Cancel</button>
+        <button type="button" onclick="saveFolderModal()" class="px-5 py-2 rounded-xl btn-accent text-xs font-extrabold shadow">Save Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI GENERATE PYQS MODAL -->
+  <div id="aiGenModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
+    <div class="panel-box rounded-3xl max-w-md w-full p-5 space-y-3 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-main">✨ AI MPSC GS Question Generator</h3>
+        <button type="button" onclick="closeModal('aiGenModal')" class="text-sub font-bold">✕</button>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-sub mb-1">Save Generated MCQs Into Chapter:</label>
+        <select id="aiGenFolderSelect" class="w-full btn-soft rounded-xl p-2 text-xs font-extrabold"></select>
+      </div>
+      <textarea id="aiGenTopicInput" rows="3" class="w-full sub-box rounded-xl p-2.5 text-xs font-bold text-main outline-none" placeholder="Type a chapter or paste notes (e.g., Mahatma Phule & Satyashodhak Samaj, Governor Powers, Godavari Tributaries, Vitamins)..."></textarea>
+      <select id="aiGenCountSelect" class="w-full btn-soft rounded-xl p-2 text-xs font-bold">
+        <option value="5">5 MPSC Group B Level MCQs (Statement + Direct Mix)</option>
+        <option value="10">10 MPSC Group B Level MCQs (Statement + Direct Mix)</option>
+      </select>
+      <div id="aiGenStatus" class="hidden p-2.5 rounded-xl text-xs font-bold"></div>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="closeModal('aiGenModal')" class="px-4 py-2 rounded-xl btn-soft text-xs font-bold">Cancel</button>
+        <button type="button" onclick="generateGsQuestionsWithAi()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white text-xs font-extrabold shadow">✨ Generate MCQs</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI KEY MODAL -->
+  <div id="aiModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
+    <div class="panel-box rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-main">✨ Gemini AI Key Setup</h3>
+        <button type="button" onclick="closeModal('aiModal')" class="text-sub font-bold">✕</button>
+      </div>
+      <input id="inputGeminiApiKey" type="password" class="w-full sub-box rounded-xl p-2.5 text-xs font-mono text-main outline-none" placeholder="AIzaSy..." />
+      <div id="aiKeyTestStatus" class="hidden p-2.5 rounded-xl text-xs font-bold"></div>
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" class="block text-xs text-indigo-400 underline font-bold">↗ Get free key from Google AI Studio</a>
+      <div class="flex justify-between items-center pt-2">
+        <button type="button" onclick="testGeminiKey()" class="px-3.5 py-2 rounded-xl bg-violet-500/20 text-violet-400 border border-violet-500/30 text-xs font-extrabold">⚡ Test Key</button>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeModal('aiModal')" class="px-4 py-2 rounded-xl btn-soft text-xs font-bold">Cancel</button>
+          <button type="button" onclick="saveAiApiKey()" class="px-4 py-2 rounded-xl btn-accent text-xs font-extrabold">Save Key</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACKUP MODAL -->
+  <div id="backupModal" class="fixed inset-0 z-50 hidden bg-black/80 flex items-center justify-center p-4">
+    <div class="panel-box rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-main">💾 Backup & Restore GS Question Bank</h3>
+        <button type="button" onclick="closeModal('backupModal')" class="text-sub font-bold">✕</button>
+      </div>
+      <button type="button" onclick="exportBackupJson()" class="w-full py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold shadow">⬇ Download GS Backup (.json)</button>
+      <div class="p-3 rounded-2xl sub-box space-y-2">
+        <span class="text-xs font-bold text-indigo-400 block">Restore Backup File:</span>
+        <input type="file" accept=".json" onchange="importBackupJson(event)" class="block w-full text-xs text-sub" />
+      </div>
+      <div class="flex justify-between items-center pt-2">
+        <button type="button" onclick="resetToDefaultData()" class="text-xs text-rose-500 font-extrabold">Reload Sample MPSC GS Syllabus</button>
+        <button type="button" onclick="closeModal('backupModal')" class="px-4 py-1.5 rounded-xl btn-soft text-xs font-bold">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== DEFAULT MPSC GROUP B SYLLABUS & SAMPLE PYQs ====================
+    const DEFAULT_GS_DATA = {
+      folders: [
+        // 1. HISTORY
+        { id: 'f-his', name: 'History (India & MH)', icon: '📜', parentId: null },
+        { id: 'f-his-mod', name: '1. Modern Indian History', icon: '🇮🇳', parentId: 'f-his' },
+        { id: 'f-his-mh', name: '2. Maharashtra History & समाज सुधारक', icon: '🚩', parentId: 'f-his' },
+
+        // 2. GEOGRAPHY
+        { id: 'f-geo', name: 'Geography (MH & India)', icon: '🌍', parentId: null },
+        { id: 'f-geo-mh', name: '1. Maharashtra Geography (नद्या, घाट, मृदा)', icon: '🗺️', parentId: 'f-geo' },
+        { id: 'f-geo-ind', name: '2. India & Physical Geography', icon: '🏔️', parentId: 'f-geo' },
+
+        // 3. POLITY
+        { id: 'f-pol', name: 'Polity & Panchayat Raj', icon: '⚖️', parentId: null },
+        { id: 'f-pol-con', name: '1. Indian Constitution (Articles & Parts)', icon: '🏛️', parentId: 'f-pol' },
+        { id: 'f-pol-pan', name: '2. Panchayat Raj & Local Govt (73rd/74th)', icon: '🏘️', parentId: 'f-pol' },
+
+        // 4. ECONOMICS
+        { id: 'f-eco', name: 'Indian Economy', icon: '📈', parentId: null },
+        { id: 'f-eco-pub', name: '1. Public Finance, Budget & Banking', icon: '🏦', parentId: 'f-eco' },
+        { id: 'f-eco-dev', name: '2. Five-Year Plans, Poverty & Indices', icon: '📊', parentId: 'f-eco' },
+
+        // 5. GENERAL SCIENCE
+        { id: 'f-sci', name: 'General Science', icon: '🔬', parentId: null },
+        { id: 'f-sci-phy', name: '1. Physics (Laws, Optics, Electricity)', icon: '⚡', parentId: 'f-sci' },
+        { id: 'f-sci-che', name: '2. Chemistry (Compounds, Reactions, Ores)', icon: '⚗️', parentId: 'f-sci' },
+        { id: 'f-sci-bio', name: '3. Biology (Botany, Zoology, Diseases)', icon: '🌿', parentId: 'f-sci' }
+      ],
+      questions: [
+        {
+          id: 'q1', folderId: 'f-his-mh', examTag: 'MPSC Group B PYQ',
+          stem: 'Consider the following statements regarding Mahatma Jyotirao Phule and Satyashodhak Samaj:\n1. He founded the Satyashodhak Samaj on 24 September 1873 in Pune.\n2. "Gulamgiri" was written by him in 1873 and dedicated to the people of the United States who abolished slavery.\n3. The newspaper "Deenbandhu" was started by Gopal Hari Deshmukh.\nWhich of the statements given above are correct?',
+          options: ['1 and 2 only', '2 and 3 only', '1 and 3 only', '1, 2 and 3'],
+          correctIndex: 0,
+          explanation: '• Statement 1 is CORRECT: Satyashodhak Samaj was founded on 24 Sept 1873 in Pune.\n• Statement 2 is CORRECT: Gulamgiri (1873) was dedicated to American abolitionists.\n• Statement 3 is INCORRECT: "Deenbandhu" (1877) was started by Krishnarao Bhalekar as the mouthpiece of Satyashodhak Samaj, NOT Gopal Hari Deshmukh (Lokhitwadi).',
+          note: 'Deenbandhu = Krishnarao Bhalekar (1877) | Lokhitwadi = Shatpatre in Prabhakar',
+          tags: ['Must'], mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+        },
+        {
+          id: 'q2', folderId: 'f-his-mod', examTag: 'STI Prelims PYQ',
+          stem: 'Consider the following statements regarding the Doctrine of Lapse:\n1. Satara was the first princely state annexed by Lord Dalhousie under this doctrine in 1848.\n2. Awadh was annexed in 1856 on the ground of Doctrine of Lapse.\nWhich of the statements given above is/are NOT correct?',
+          options: ['1 only', '2 only', 'Both 1 and 2', 'Neither 1 nor 2'],
+          correctIndex: 1,
+          explanation: '• Question asks which statement is NOT correct!\n• Statement 1 is correct (Satara 1848, Jaitpur & Sambalpur 1849, Nagpur 1854).\n• Statement 2 is INCORRECT: Awadh (1856) was annexed on the pretext of "Misgovernance / Maladministration" (Outram Report), NOT Doctrine of Lapse.',
+          note: 'Chronology Trick: सा-जै-सै-ब-उ-झा-ना (Awadh = Misgovernance 1856)',
+          tags: ['Confused'], mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+        },
+        {
+          id: 'q3', folderId: 'f-pol-con', examTag: 'MPSC Group B PYQ',
+          stem: 'Which of the following Articles of the Indian Constitution empowers the Governor of a State to promulgate Ordinances during the recess of the State Legislature?',
+          options: ['Article 123', 'Article 213', 'Article 143', 'Article 153'],
+          correctIndex: 1,
+          explanation: '• Article 213: Ordinance making power of the Governor.\n• Article 123: Ordinance making power of the President.\n• Article 143: Power of President to consult the Supreme Court (Advisory Jurisdiction).\n• Article 153: Governors of States.',
+          note: 'President = 1-2-3 | Swap 1 and 2 for Governor = 2-1-3!',
+          tags: ['Confused', 'Must'], mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+        },
+        {
+          id: 'q4', folderId: 'f-geo-mh', examTag: 'PSI Prelims PYQ',
+          stem: 'Which one of the following is a RIGHT-BANK tributary of the Godavari River in Maharashtra?',
+          options: ['Purna', 'Pranhita', 'Manjira', 'Indravati'],
+          correctIndex: 2,
+          explanation: '• Right-Bank Tributaries of Godavari: Pravara, Mula, Sindphana, Bindusara, and Manjira.\n• Left-Bank Tributaries: Kadva, Shivana, Purna, Kadam, Pranhita (Wardha + Wainganga + Penganga), Indravati, and Sabari.',
+          note: 'Right Bank = Pravara, Sindphana, Manjira (डाव्या = पूर्णा, प्राणहिता, इंद्रावती)',
+          tags: ['Forget'], mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+        },
+        {
+          id: 'q5', folderId: 'f-sci-phy', examTag: 'MPSC Science PYQ',
+          stem: 'Consider the following statements regarding Total Internal Reflection (TIR):\n1. Light must travel from an optically denser medium to an optically rarer medium.\n2. The angle of incidence in the denser medium must be greater than the critical angle.\nWhich of the statements given above is/are correct?',
+          options: ['1 only', '2 only', 'Both 1 and 2', 'Neither 1 nor 2'],
+          correctIndex: 2,
+          explanation: 'Both conditions are mandatory for Total Internal Reflection (पूर्ण आंतरिक परावर्तन).\nExamples: Sparkling of diamond, Optical fiber communication, Mirage in desert, Endoscope.',
+          note: 'TIR = Denser -> Rarer + Angle > Critical Angle',
+          tags: ['Must'], mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+        },
+        {
+          id: 'q6', folderId: 'f-sci-bio', examTag: 'STI Mains PYQ',
+          stem: 'Which of the following vitamins contains a Cobalt (Co) metal ion in its chemical structure and its deficiency causes Pernicious Anemia?',
+          options: ['Vitamin B1 (Thiamine)', 'Vitamin B6 (Pyridoxine)', 'Vitamin B9 (Folic Acid)', 'Vitamin B12 (Cyanocobalamin)'],
+          correctIndex: 3,
+          explanation: '• Vitamin B12 is chemically called Cyanocobalamin because it contains a Cobalt (Co) metal atom at its core.\n• Its deficiency leads to Pernicious Anemia (megaloblastic RBCs) and nerve demyelination.',
+          note: 'Cobalamin = Cobalt metal ion',
+          tags: ['Forget'], mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+        }
+      ]
+    };
+
+    const STORAGE_KEY = 'gs_mockpro_v1_data';
+    const THEME_KEY   = 'gs_mockpro_v1_theme';
+    const AI_KEY_STORAGE = 'recallpro_gemini_api_key';
+
+    let appData = JSON.parse(JSON.stringify(DEFAULT_GS_DATA));
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved && Array.isArray(saved.folders) && Array.isArray(saved.questions)) appData = saved;
+    } catch (e) {}
+
+    // Collapse main subjects except the active one's parent so the sidebar starts clean like Testbook
+    let activeFolderId = 'f-his-mh';
+    let collapsedFolders = new Set(['f-geo', 'f-pol', 'f-eco', 'f-sci']);
+    let includeSubfolders = true;
+    let simulatorMode = 'practice'; // 'practice' | 'omr' | 'list'
+    let specialFilter = ''; // '' | 'errors' | 'Confused' | 'Forget' | 'Must' | 'guesses'
+    let searchQuery = '';
+
+    let currentQIndex = 0;
+    let explanationOpen = false;
+    let highlightTraps = true;
+    let shuffleOpts = false;
+    let hideOpts = false;
+    let tempRevealedOpts = false;
+    let omrSubmitted = false;
+
+    let stmtToggleState = {}; // { "qId_lineIdx": "true" | "false" }
+    let optionShuffleMap = {}; // { qId: [2, 0, 3, 1] }
+
+    let qTimerInterval = null;
+    let totalMockSeconds = 0;
+    let sessionStats = { solved: 0, right: 0, wrong: 0 };
+
+    let modalMemoryTags = new Set();
+    let selectedQuestionIds = new Set();
+    let listRenderLimit = 40;
+    let saveDebounceTimer = null;
+    let searchDebounceTimer = null;
+
+    function saveToStorage() {
+      if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+      saveDebounceTimer = setTimeout(() => {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch (e) {}
+      }, 120);
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // ==================== FOLDER HIERARCHY HELPERS ====================
+    function getFolderById(id) { return appData.folders.find(f => f.id === id); }
+    function getChildFolders(pid) { return appData.folders.filter(f => f.parentId === pid); }
+    function getDescendantFolderIds(fid) {
+      let ids = [fid];
+      getChildFolders(fid).forEach(ch => { ids = ids.concat(getDescendantFolderIds(ch.id)); });
+      return ids;
+    }
+    function getBreadcrumbPath(fid) {
+      const p = [];
+      let c = getFolderById(fid);
+      while (c) { p.unshift(c); c = c.parentId ? getFolderById(c.parentId) : null; }
+      return p;
+    }
+    function getQuestionsForFolder(fid, inc = true) {
+      if (!fid) return appData.questions;
+      const ids = inc ? getDescendantFolderIds(fid) : [fid];
+      return appData.questions.filter(q => ids.includes(q.folderId));
+    }
+
+    function getActiveQuestionPool() {
+      let list = [];
+      if (specialFilter === 'errors') {
+        list = appData.questions.filter(q => (q.mistakeCount || 0) > 0);
+      } else if (specialFilter === 'guesses') {
+        list = appData.questions.filter(q => q.confidence === 'guess');
+      } else if (['Confused', 'Forget', 'Must'].includes(specialFilter)) {
+        list = appData.questions.filter(q => Array.isArray(q.tags) && q.tags.includes(specialFilter));
+      } else {
+        list = [...getQuestionsForFolder(activeFolderId, includeSubfolders)];
+      }
+
+      if (searchQuery.trim()) {
+        const sq = searchQuery.toLowerCase();
+        const matchFn = q =>
+          q.stem.toLowerCase().includes(sq) ||
+          (q.explanation && q.explanation.toLowerCase().includes(sq)) ||
+          (q.note && q.note.toLowerCase().includes(sq)) ||
+          q.options.some(o => o.toLowerCase().includes(sq));
+        list = list.filter(matchFn);
+        if (list.length === 0) list = appData.questions.filter(matchFn);
+      }
+      return list;
+    }
+
+    // ==================== COLLAPSIBLE ACCORDION SIDEBAR ====================
+    function toggleFolderCollapse(fid, ev) {
+      if (ev) ev.stopPropagation();
+      if (collapsedFolders.has(fid)) collapsedFolders.delete(fid);
+      else collapsedFolders.add(fid);
+      renderFolderTreesOnly();
+    }
+
+    function buildFolderTreeHtml(pid = null, depth = 0) {
+      return getChildFolders(pid).map(f => {
+        const isAct = !specialFilter && f.id === activeFolderId;
+        const cnt = getQuestionsForFolder(f.id, true).length;
+        const children = getChildFolders(f.id);
+        const isCollapsed = collapsedFolders.has(f.id);
+        const ic = f.icon || (depth === 0 ? '🏛️' : '📂');
+
+        return `<div style="margin-left:${depth * 10}px" class="space-y-1">
+          <div onclick="handleFolderClick('${f.id}')" class="cursor-pointer px-2.5 py-2 rounded-2xl border text-xs sm:text-sm flex items-center justify-between gap-1 transition ${isAct ? 'btn-accent font-extrabold shadow' : 'sub-box text-main hover:opacity-90'}">
+            <div class="flex items-center gap-1.5 truncate">
+              ${children.length ? `<button type="button" onclick="toggleFolderCollapse('${f.id}', event)" class="w-5 h-5 rounded flex items-center justify-center text-xs font-extrabold hover:bg-black/20">${isCollapsed ? '▸' : '▾'}</button>` : `<span class="w-3"></span>`}
+              <span class="truncate">${ic} ${escapeHtml(f.name)}</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0" onclick="event.stopPropagation()">
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-black/20 font-bold">${cnt}</span>
+              <button type="button" onclick="openQuestionModal(null, '${f.id}')" class="w-6 h-6 rounded-lg bg-black/25 hover:bg-black/50 font-extrabold text-xs flex items-center justify-center text-white" title="Add MCQ to this folder">+</button>
+            </div>
+          </div>
+          ${(!isCollapsed && children.length) ? buildFolderTreeHtml(f.id, depth + 1) : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function renderFolderTreesOnly() {
+      const html = buildFolderTreeHtml(null, 0);
+      document.getElementById('desktopFolderTree').innerHTML = html;
+      document.getElementById('mobileFolderTree').innerHTML = html;
+    }
+
+    function handleFolderClick(fid) {
+      const children = getChildFolders(fid);
+      // If clicking a collapsed main folder, auto-expand it!
+      if (children.length && collapsedFolders.has(fid)) {
+        collapsedFolders.delete(fid);
+      }
+      specialFilter = '';
+      activeFolderId = fid;
+      currentQIndex = 0;
+      explanationOpen = false;
+      tempRevealedOpts = false;
+      closeMobileSidebar();
+      renderAll();
+    }
+
+    function setSpecialFilter(filterName) {
+      specialFilter = filterName;
+      currentQIndex = 0;
+      explanationOpen = false;
+      renderAll();
+    }
+
+    // ==================== TRAP-WORD & INTERACTIVE MULTI-STATEMENT STEM FORMATTER ====================
+    function formatInteractiveStem(q) {
+      const lines = String(q.stem || '').split(/\r?\n/);
+      let hasMultiStatements = false;
+
+      const highlightTrapWords = str => {
+        let safe = escapeHtml(str);
+        if (!highlightTraps) return safe;
+        return safe.replace(/\b(NOT|INCORRECT|INCORRECTLY|ONLY|NEVER|NONE|FALSE|EXCEPT|WRONG)\b|(चुकीचे|चुकीचा|अयोग्य|नसलेले|नाही|केवळ|फक्त|बिनचूक|सत्य नसलेले)/g, '<span class="trap-word">$&</span>');
+      };
+
+      const formattedLines = lines.map((line, lIdx) => {
+        const trimmed = line.trim();
+        // Detect numbered or lettered statements like "1. ...", "2. ...", "a) ...", "(a) ..."
+        if (/^(\d+[\.\)]|[a-dA-D][\.\)]|\([a-dA-D1-4]\))\s+/.test(trimmed)) {
+          hasMultiStatements = true;
+          const key = `${q.id}_${lIdx}`;
+          const stState = stmtToggleState[key] || '';
+          const cls = stState === 'true' ? 'stmt-line stmt-true' : (stState === 'false' ? 'stmt-line stmt-false' : 'stmt-line');
+          const badge = stState === 'true'
+            ? `<span class="px-2 py-0.5 rounded bg-emerald-500 text-slate-950 text-[10px] font-extrabold shrink-0">✓ TRUE</span>`
+            : (stState === 'false'
+              ? `<span class="px-2 py-0.5 rounded bg-rose-500 text-white text-[10px] font-extrabold shrink-0">✕ FALSE</span>`
+              : `<span class="px-2 py-0.5 rounded btn-soft text-[10px] font-bold shrink-0">Tap ✓/✕</span>`);
+          return `<div onclick="toggleStatementLine('${q.id}', ${lIdx})" class="${cls}">
+            <span>${highlightTrapWords(trimmed)}</span>
+            ${badge}
+          </div>`;
+        }
+        return `<div>${highlightTrapWords(line)}</div>`;
+      });
+
+      document.getElementById('qInteractiveHint').classList.toggle('hidden', !hasMultiStatements);
+      return formattedLines.join('');
+    }
+
+    function toggleStatementLine(qId, lineIdx) {
+      const key = `${qId}_${lineIdx}`;
+      const cur = stmtToggleState[key] || '';
+      stmtToggleState[key] = cur === '' ? 'true' : (cur === 'true' ? 'false' : '');
+      renderActiveQuestionOnly();
+    }
+
+    // ==================== MAIN RENDERER & QUESTION ARENA ====================
+    function updateVaultCounts() {
+      let errCnt = 0, confCnt = 0, forgCnt = 0, mustCnt = 0, guessCnt = 0;
+      appData.questions.forEach(q => {
+        if ((q.mistakeCount || 0) > 0) errCnt++;
+        if (q.confidence === 'guess') guessCnt++;
+        if (Array.isArray(q.tags)) {
+          if (q.tags.includes('Confused')) confCnt++;
+          if (q.tags.includes('Forget')) forgCnt++;
+          if (q.tags.includes('Must')) mustCnt++;
+        }
+      });
+      document.getElementById('vaultCntErrors').textContent   = errCnt;
+      document.getElementById('vaultCntConfused').textContent = confCnt;
+      document.getElementById('vaultCntForget').textContent   = forgCnt;
+      document.getElementById('vaultCntMust').textContent     = mustCnt;
+      document.getElementById('vaultCntGuesses').textContent  = guessCnt;
+      document.getElementById('btnResetVault').classList.toggle('hidden', !specialFilter);
+    }
+
+    function renderAll() {
+      if (!getFolderById(activeFolderId) && appData.folders.length) activeFolderId = appData.folders[0].id;
+      renderFolderTreesOnly();
+      updateVaultCounts();
+
+      const folder = getFolderById(activeFolderId);
+      const pool = getActiveQuestionPool();
+
+      const titleMap = {
+        errors: '📕 Smart Error Book (Wrong PYQs)',
+        Confused: '⚡ Often Confused Vault',
+        Forget: '🧠 Usually Forget Vault',
+        Must: '🔥 Must Remember (VIMP) Vault',
+        guesses: '🎲 50-50 Lucky Guesses Vault'
+      };
+
+      if (specialFilter) {
+        document.getElementById('folderBreadcrumb').innerHTML = `<span class="text-amber-400">🧠 Revision Vault Filter Active</span>`;
+        document.getElementById('activeFolderTitle').textContent = titleMap[specialFilter] || 'Filtered Vault';
+        document.getElementById('subfolderPillsContainer').classList.add('hidden');
+      } else if (folder) {
+        const path = getBreadcrumbPath(activeFolderId);
+        document.getElementById('folderBreadcrumb').innerHTML = path.map((n, i) => `<button type="button" onclick="handleFolderClick('${n.id}')" class="hover:underline">${n.icon || '📁'} ${escapeHtml(n.name)}</button>${i < path.length - 1 ? '<span class="opacity-60">›</span>' : ''}`).join('');
+        document.getElementById('activeFolderTitle').textContent = `${folder.icon || '📁'} ${folder.name}`;
+
+        const ch = getChildFolders(activeFolderId), pb = document.getElementById('subfolderPillsContainer');
+        if (ch.length) {
+          pb.classList.remove('hidden');
+          document.getElementById('subfolderPillsList').innerHTML = `<span class="text-[11px] font-bold text-sub">Sub-Chapters:</span>` + ch.map(c => `
+            <div class="inline-flex items-center rounded-xl btn-soft overflow-hidden text-xs font-bold">
+              <button type="button" onclick="handleFolderClick('${c.id}')" class="px-2.5 py-1 hover:opacity-80">${c.icon || '📂'} ${escapeHtml(c.name)} (${getQuestionsForFolder(c.id, true).length})</button>
+              <button type="button" onclick="openQuestionModal(null, '${c.id}')" class="px-2 py-1 bg-indigo-500/20 text-indigo-400 font-extrabold border-l border-slate-500/20">+</button>
+            </div>`).join('');
+        } else pb.classList.add('hidden');
+      }
+
+      document.getElementById('activeFolderCount').textContent = `${pool.length} MCQs`;
+
+      // Update Mode Tabs
+      ['practice', 'omr', 'list'].forEach(m => {
+        const b = document.getElementById(`tab-${m}`);
+        if (b) {
+          b.className = m === simulatorMode
+            ? 'py-2.5 px-3 rounded-2xl text-xs font-extrabold border btn-accent shadow transition'
+            : 'py-2.5 px-3 rounded-2xl text-xs font-extrabold border sub-box text-sub hover:opacity-90 transition';
+        }
+      });
+
+      const isEmpty = pool.length === 0 && simulatorMode !== 'list';
+      document.getElementById('emptyFolderLaunchpad').classList.toggle('hidden', !isEmpty);
+      document.getElementById('view-simulator').classList.toggle('hidden', isEmpty || simulatorMode === 'list');
+      document.getElementById('view-list').classList.toggle('hidden', simulatorMode !== 'list');
+
+      if (simulatorMode === 'list') {
+        renderQuestionBankList();
+      } else if (!isEmpty) {
+        renderActiveQuestionOnly();
+        renderOmrPaletteOnly();
+      }
+      updateSessionPill();
+    }
+
+    function getOptionOrderForQuestion(q) {
+      if (!shuffleOpts) return [0, 1, 2, 3];
+      if (!optionShuffleMap[q.id]) {
+        optionShuffleMap[q.id] = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+      }
+      return optionShuffleMap[q.id];
+    }
+
+    function renderActiveQuestionOnly() {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      if (currentQIndex >= pool.length) currentQIndex = 0;
+      const q = pool[currentQIndex];
+      const qFolder = getFolderById(q.folderId);
+
+      document.getElementById('qNumberBadge').textContent = `Q. ${currentQIndex + 1} / ${pool.length}`;
+      document.getElementById('qChapterBadge').textContent = qFolder ? `${qFolder.icon || '📂'} ${qFolder.name}` : 'GS';
+      document.getElementById('qExamTagBadge').textContent = q.examTag || 'MPSC Group B';
+
+      const mBadge = document.getElementById('qMistakeStreakBadge');
+      if ((q.mistakeCount || 0) > 0) {
+        mBadge.textContent = `🚨 Missed ${q.mistakeCount}x`;
+        mBadge.classList.remove('hidden');
+      } else {
+        mBadge.classList.add('hidden');
+      }
+
+      document.getElementById('btnMarkReview').className = q.markedReview
+        ? 'px-2.5 py-1 rounded-lg bg-purple-600 text-white font-extrabold text-[11px] shadow'
+        : 'px-2.5 py-1 rounded-lg btn-soft font-extrabold text-[11px]';
+
+      // Render Stem
+      document.getElementById('qStemContainer').innerHTML = formatInteractiveStem(q);
+
+      // Confidence Buttons
+      document.getElementById('btnConfSure').className = q.confidence === 'sure'
+        ? 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-extrabold text-[11px] shadow'
+        : 'px-2.5 py-1 rounded-lg btn-soft font-extrabold text-[11px]';
+      document.getElementById('btnConfGuess').className = q.confidence === 'guess'
+        ? 'px-2.5 py-1 rounded-lg bg-sky-500 text-slate-950 font-extrabold text-[11px] shadow'
+        : 'px-2.5 py-1 rounded-lg btn-soft font-extrabold text-[11px]';
+
+      // Hide Options Check
+      const shouldHide = hideOpts && !tempRevealedOpts && q.selectedOption === null;
+      document.getElementById('hiddenOptionsCover').classList.toggle('hidden', !shouldHide);
+      document.getElementById('qOptionsContainer').classList.toggle('hidden', shouldHide);
+
+      // Render 4 Radio Options
+      const letters = ['A', 'B', 'C', 'D'];
+      const order = getOptionOrderForQuestion(q);
+      const elimSet = new Set(q.eliminated || []);
+      const showVerdictNow = (simulatorMode === 'practice' && q.selectedOption !== null) || (simulatorMode === 'omr' && omrSubmitted);
+
+      document.getElementById('qOptionsContainer').innerHTML = order.map((origIdx, displayPos) => {
+        const optText = q.options[origIdx] || '';
+        const isSelected = q.selectedOption === origIdx;
+        const isCorrect  = q.correctIndex === origIdx;
+        const isElim     = elimSet.has(origIdx);
+
+        let rowCls = 'sub-box text-main hover:border-indigo-500/50';
+        let radioCircle = `<span class="w-7 h-7 rounded-full border-2 border-slate-400/50 flex items-center justify-center text-xs font-extrabold shrink-0">${letters[displayPos]}</span>`;
+
+        if (showVerdictNow) {
+          if (isCorrect) {
+            rowCls = 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-300 font-extrabold shadow';
+            radioCircle = `<span class="w-7 h-7 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-xs font-extrabold shrink-0">✓</span>`;
+          } else if (isSelected && !isCorrect) {
+            rowCls = 'bg-rose-500/20 border-2 border-rose-500 text-rose-300 font-extrabold';
+            radioCircle = `<span class="w-7 h-7 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-extrabold shrink-0">✕</span>`;
+          }
+        } else if (isSelected) {
+          rowCls = 'btn-accent font-extrabold shadow';
+          radioCircle = `<span class="w-7 h-7 rounded-full bg-white text-indigo-700 flex items-center justify-center text-xs font-extrabold shrink-0">●</span>`;
+        }
+
+        return `<div class="rounded-2xl border p-3 sm:p-3.5 flex items-center justify-between gap-2 transition ${rowCls} ${isElim ? 'opt-eliminated' : ''}">
+          <div onclick="selectOptionAnswer(${origIdx})" class="flex items-center gap-3 flex-1 cursor-pointer">
+            ${radioCircle}
+            <span class="opt-text text-xs sm:text-sm leading-snug">${escapeHtml(optText)}</span>
+          </div>
+          <button type="button" onclick="toggleEliminateOption(${origIdx}, event)" class="px-2 py-1 rounded-lg bg-black/25 hover:bg-black/45 text-[10px] font-extrabold shrink-0" title="50-50 Strike-through Option">
+            ${isElim ? 'Undo' : '✂️ ✕'}
+          </button>
+        </div>`;
+      }).join('');
+
+      // Memory Tag Buttons
+      const qTags = new Set(q.tags || []);
+      document.getElementById('qTagBtn-Confused').className = qTags.has('Confused')
+        ? 'px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-extrabold text-xs shadow'
+        : 'px-3 py-1.5 rounded-xl btn-soft font-extrabold text-xs text-amber-400';
+      document.getElementById('qTagBtn-Forget').className = qTags.has('Forget')
+        ? 'px-3 py-1.5 rounded-xl bg-rose-500 text-white font-extrabold text-xs shadow'
+        : 'px-3 py-1.5 rounded-xl btn-soft font-extrabold text-xs text-rose-400';
+      document.getElementById('qTagBtn-Must').className = qTags.has('Must')
+        ? 'px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs shadow'
+        : 'px-3 py-1.5 rounded-xl btn-soft font-extrabold text-xs text-emerald-400';
+
+      // OMR vs Practice Buttons
+      document.getElementById('btnSubmitOmrTest').classList.toggle('hidden', simulatorMode !== 'omr' || omrSubmitted);
+      document.getElementById('btnToggleExplanation').textContent = explanationOpen ? '🙈 Hide Explanation' : '💡 View Explanation';
+
+      // Explanation Drawer Content
+      const expDrawer = document.getElementById('qExplanationDrawer');
+      const canShowExp = explanationOpen && (simulatorMode === 'practice' || omrSubmitted);
+      expDrawer.classList.toggle('hidden', !canShowExp);
+
+      if (canShowExp) {
+        const rightPos = order.indexOf(q.correctIndex);
+        const rightLetter = letters[rightPos >= 0 ? rightPos : q.correctIndex];
+        const rightText = q.options[q.correctIndex] || '';
+        const vBanner = document.getElementById('qVerdictBanner');
+
+        if (q.selectedOption === null) {
+          vBanner.className = 'font-extrabold text-amber-400';
+          vBanner.textContent = `💡 Correct Answer: (${rightLetter}) ${rightText}`;
+        } else if (q.selectedOption === q.correctIndex) {
+          vBanner.className = 'font-extrabold text-emerald-400';
+          vBanner.textContent = `✅ Spot On! (${rightLetter}) ${rightText} ${q.confidence === 'guess' ? '· 🎲 Flagged as 50-50 Guess' : ''}`;
+        } else {
+          vBanner.className = 'font-extrabold text-rose-400';
+          vBanner.textContent = `❌ Wrong Pick! Correct Answer: (${rightLetter}) ${rightText} — Logged to Error Book`;
+        }
+
+        document.getElementById('qExplanationText').textContent = q.explanation || 'No explanation added yet. Tap ✎ at the top right of the question to add notes.';
+
+        const noteBox = document.getElementById('qStickyNoteBox');
+        if (q.note) {
+          noteBox.textContent = `📝 My Sticky Note / Trick: ${q.note}`;
+          noteBox.classList.remove('hidden');
+        } else {
+          noteBox.classList.add('hidden');
+        }
+
+        // Scan for related PYQs in the same chapter/topic
+        const relBox = document.getElementById('qRelatedPyqsBox');
+        const keywords = q.stem.split(/\s+/).filter(w => w.length >= 6).slice(0, 3);
+        const related = keywords.length
+          ? appData.questions.filter(x => x.id !== q.id && keywords.some(kw => x.stem.toLowerCase().includes(kw.toLowerCase()))).slice(0, 2)
+          : [];
+        if (related.length) {
+          relBox.classList.remove('hidden');
+          relBox.innerHTML = `<div class="text-[11px] font-extrabold text-indigo-400">🔗 Related PYQs in Your Bank:</div>` +
+            related.map(r => `<button type="button" onclick="jumpToQuestionById('${r.id}')" class="block w-full text-left p-2 rounded-xl panel-box hover:border-indigo-500/50 text-xs truncate">• ${escapeHtml(r.stem)}</button>`).join('');
+        } else {
+          relBox.classList.add('hidden');
+        }
+      }
+
+      document.getElementById('qStopwatchDisplay').textContent = `${q.timeSpent || 0}s`;
+    }
+
+    function renderOmrPaletteOnly() {
+      const pool = getActiveQuestionPool();
+      let right = 0, wrong = 0, left = 0;
+
+      const gridHtml = pool.map((q, idx) => {
+        const isCur = idx === currentQIndex;
+        let btnCls = 'btn-soft text-sub';
+
+        if (q.selectedOption === null) {
+          left++;
+          if (q.markedReview) btnCls = 'bg-purple-600 text-white font-extrabold';
+        } else if (simulatorMode === 'omr' && !omrSubmitted) {
+          btnCls = q.markedReview ? 'bg-purple-600 text-white font-extrabold' : 'bg-indigo-600 text-white font-extrabold';
+        } else {
+          if (q.selectedOption === q.correctIndex) {
+            right++;
+            btnCls = 'bg-emerald-600 text-white font-extrabold';
+          } else {
+            wrong++;
+            btnCls = 'bg-rose-600 text-white font-extrabold';
+          }
+        }
+
+        return `<button type="button" onclick="goToQuestionIndex(${idx})" class="h-8 rounded-xl text-xs font-extrabold transition ${btnCls} ${isCur ? 'ring-2 ring-amber-400 scale-105' : ''}">${idx + 1}</button>`;
+      }).join('');
+
+      document.getElementById('omrPaletteGrid').innerHTML = gridHtml;
+      document.getElementById('palCntCorrect').textContent = (simulatorMode === 'omr' && !omrSubmitted) ? '—' : right;
+      document.getElementById('palCntWrong').textContent   = (simulatorMode === 'omr' && !omrSubmitted) ? '—' : wrong;
+      document.getElementById('palCntSkipped').textContent = left;
+      const net = right - (wrong * 0.25);
+      document.getElementById('palNetScore').textContent  = (simulatorMode === 'omr' && !omrSubmitted) ? '—' : net.toFixed(2);
+    }
+
+    // ==================== ANSWERING, ELIMINATION & EXPLANATION MECHANICS ====================
+    function selectOptionAnswer(origOptIdx) {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      const q = pool[currentQIndex];
+
+      // In OMR Mode before submission, allow changing options freely without revealing answer
+      if (simulatorMode === 'omr' && !omrSubmitted) {
+        q.selectedOption = (q.selectedOption === origOptIdx) ? null : origOptIdx;
+        saveToStorage();
+        renderActiveQuestionOnly();
+        renderOmrPaletteOnly();
+        return;
+      }
+
+      // In Instant Practice Mode
+      const FirstTimeAnswering = (q.selectedOption === null);
+      q.selectedOption = origOptIdx;
+
+      // Auto-tag as 50-50 Guess if user used option elimination on 1-2 options and didn't set confidence
+      if (!q.confidence && Array.isArray(q.eliminated) && q.eliminated.length > 0) {
+        q.confidence = 'guess';
+      }
+
+      if (origOptIdx === q.correctIndex) {
+        if (FirstTimeAnswering) { sessionStats.solved++; sessionStats.right++; }
+        q.correctStreak = (q.correctStreak || 0) + 1;
+        // 2-Strike Error Book Rule: Clear from Error Book once answered right twice in a row (unless it was a 50-50 guess)
+        if ((q.mistakeCount || 0) > 0 && q.correctStreak >= 2 && q.confidence !== 'guess') {
+          q.mistakeCount = 0;
+        }
+      } else {
+        if (FirstTimeAnswering) { sessionStats.solved++; sessionStats.wrong++; }
+        q.mistakeCount = (q.mistakeCount || 0) + 1;
+        q.correctStreak = 0;
+        // Automatically open explanation when user gets a question wrong!
+        explanationOpen = true;
+      }
+
+      saveToStorage();
+      updateVaultCounts();
+      updateSessionPill();
+      renderActiveQuestionOnly();
+      renderOmrPaletteOnly();
+    }
+
+    function toggleEliminateOption(origOptIdx, ev) {
+      if (ev) ev.stopPropagation();
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      const q = pool[currentQIndex];
+      if (!Array.isArray(q.eliminated)) q.eliminated = [];
+      const i = q.eliminated.indexOf(origOptIdx);
+      if (i >= 0) q.eliminated.splice(i, 1);
+      else q.eliminated.push(origOptIdx);
+      saveToStorage();
+      renderActiveQuestionOnly();
+    }
+
+    function toggleExplanationDrawer() {
+      if (simulatorMode === 'omr' && !omrSubmitted) {
+        alert('In Strict OMR Mock Mode, explanations are unlocked after you tap "✅ Submit Mock Test"!');
+        return;
+      }
+      explanationOpen = !explanationOpen;
+      renderActiveQuestionOnly();
+    }
+
+    function setQuestionConfidence(level) {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      const q = pool[currentQIndex];
+      q.confidence = (q.confidence === level) ? null : level;
+      saveToStorage();
+      updateVaultCounts();
+      renderActiveQuestionOnly();
+    }
+
+    function toggleMarkForReview() {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      const q = pool[currentQIndex];
+      q.markedReview = !q.markedReview;
+      saveToStorage();
+      renderActiveQuestionOnly();
+      renderOmrPaletteOnly();
+    }
+
+    function toggleCurrentQuestionTag(tagName) {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      const q = pool[currentQIndex];
+      if (!Array.isArray(q.tags)) q.tags = [];
+      const idx = q.tags.indexOf(tagName);
+      if (idx >= 0) q.tags.splice(idx, 1);
+      else q.tags.push(tagName);
+      saveToStorage();
+      updateVaultCounts();
+      renderActiveQuestionOnly();
+    }
+
+    function openStickyNotePrompt() {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      const q = pool[currentQIndex];
+      const val = prompt('📝 Enter your personal sticky note, Marathi hook, or shortcut for this PYQ:', q.note || '');
+      if (val !== null) {
+        q.note = val.trim();
+        saveToStorage();
+        renderActiveQuestionOnly();
+      }
+    }
+
+    function nextQuestion() {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      explanationOpen = false;
+      tempRevealedOpts = false;
+      document.getElementById('qAiOutputBox').classList.add('hidden');
+      currentQIndex = (currentQIndex + 1) % pool.length;
+      renderActiveQuestionOnly();
+      renderOmrPaletteOnly();
+    }
+
+    function prevQuestion() {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      explanationOpen = false;
+      tempRevealedOpts = false;
+      document.getElementById('qAiOutputBox').classList.add('hidden');
+      currentQIndex = (currentQIndex - 1 + pool.length) % pool.length;
+      renderActiveQuestionOnly();
+      renderOmrPaletteOnly();
+    }
+
+    function goToQuestionIndex(idx) {
+      const pool = getActiveQuestionPool();
+      if (idx >= 0 && idx < pool.length) {
+        currentQIndex = idx;
+        explanationOpen = false;
+        tempRevealedOpts = false;
+        document.getElementById('qAiOutputBox').classList.add('hidden');
+        renderActiveQuestionOnly();
+        renderOmrPaletteOnly();
+      }
+    }
+
+    function jumpToQuestionById(qid) {
+      const q = appData.questions.find(x => x.id === qid);
+      if (!q) return;
+      specialFilter = '';
+      activeFolderId = q.folderId;
+      const pool = getActiveQuestionPool();
+      const idx = pool.findIndex(x => x.id === qid);
+      if (idx >= 0) currentQIndex = idx;
+      explanationOpen = false;
+      renderAll();
+    }
+
+    // ==================== SIMULATOR MODES & OMR SUBMISSION ====================
+    function setSimulatorMode(mode) {
+      simulatorMode = mode;
+      omrSubmitted = false;
+      document.getElementById('omrScorecardPanel').classList.add('hidden');
+      document.getElementById('omrModeLabel').textContent = mode === 'omr' ? '🏛️ Strict OMR Exam (Answers Hidden)' : '⚡ Instant Practice Mode';
+      if (mode === 'omr') {
+        explanationOpen = false;
+      }
+      renderAll();
+    }
+
+    function submitFullOmrMock() {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      omrSubmitted = true;
+      explanationOpen = true;
+
+      let right = 0, wrong = 0, skipped = 0, timeOnWrong = 0;
+      pool.forEach(q => {
+        if (q.selectedOption === null) {
+          skipped++;
+        } else if (q.selectedOption === q.correctIndex) {
+          right++;
+          q.correctStreak = (q.correctStreak || 0) + 1;
+        } else {
+          wrong++;
+          timeOnWrong += (q.timeSpent || 0);
+          q.mistakeCount = (q.mistakeCount || 0) + 1;
+          q.correctStreak = 0;
+        }
+      });
+
+      const net = (right - wrong * 0.25).toFixed(2);
+      const acc = (right + wrong) > 0 ? Math.round((right / (right + wrong)) * 100) : 0;
+
+      const card = document.getElementById('omrScorecardPanel');
+      card.classList.remove('hidden');
+      document.getElementById('omrScorecardSummary').textContent = `Net Score: ${net} / ${pool.length} · Accuracy: ${acc}% (✅ ${right} Right · ❌ ${wrong} Wrong · ⚪ ${skipped} Skipped)`;
+      document.getElementById('omrTimeTrapSummary').textContent = `⏱ Time-Trap Alert: You spent ${timeOnWrong} seconds on questions you got wrong.`;
+
+      saveToStorage();
+      updateVaultCounts();
+      renderActiveQuestionOnly();
+      renderOmrPaletteOnly();
+    }
+
+    function resetCurrentChapterAttempts() {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      if (!confirm(`Clear selected answers for these ${pool.length} questions so you can re-attempt fresh? (Your Error Book & Memory Tags will stay safe)`)) return;
+      pool.forEach(q => {
+        q.selectedOption = null;
+        q.eliminated = [];
+        q.markedReview = false;
+        q.timeSpent = 0;
+      });
+      stmtToggleState = {};
+      optionShuffleMap = {};
+      omrSubmitted = false;
+      explanationOpen = false;
+      currentQIndex = 0;
+      document.getElementById('omrScorecardPanel').classList.add('hidden');
+      saveToStorage();
+      renderAll();
+    }
+
+    function toggleTrapHighlighter() {
+      highlightTraps = !highlightTraps;
+      const btn = document.getElementById('btnTrapHighlight');
+      btn.textContent = highlightTraps ? '🚨 Trap Highlight: ON' : '🚨 Trap Highlight: OFF';
+      btn.className = highlightTraps
+        ? 'px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 font-extrabold'
+        : 'px-2.5 py-1 rounded-lg btn-soft font-bold';
+      renderActiveQuestionOnly();
+    }
+
+    function toggleShuffleOptions() {
+      shuffleOpts = !shuffleOpts;
+      optionShuffleMap = {};
+      const btn = document.getElementById('btnShuffleOpts');
+      btn.textContent = shuffleOpts ? '🔀 Shuffle Opts: ON' : '🔀 Shuffle A/B/C/D';
+      btn.className = shuffleOpts
+        ? 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-extrabold'
+        : 'px-2.5 py-1 rounded-lg btn-soft font-bold';
+      renderActiveQuestionOnly();
+    }
+
+    function toggleHideOptions() {
+      hideOpts = !hideOpts;
+      tempRevealedOpts = false;
+      const btn = document.getElementById('btnHideOpts');
+      btn.textContent = hideOpts ? '🙈 Hide Opts: ON' : '🙈 Hide Options';
+      btn.className = hideOpts
+        ? 'px-2.5 py-1 rounded-lg bg-amber-500 text-slate-950 font-extrabold'
+        : 'px-2.5 py-1 rounded-lg btn-soft font-bold';
+      renderActiveQuestionOnly();
+    }
+
+    function revealHiddenOptionsOnce() {
+      tempRevealedOpts = true;
+      renderActiveQuestionOnly();
+    }
+
+    function updateSessionPill() {
+      const acc = sessionStats.solved ? Math.round((sessionStats.right / sessionStats.solved) * 100) : 0;
+      const net = (sessionStats.right - sessionStats.wrong * 0.25).toFixed(2);
+      document.getElementById('sessionStatsPill').textContent = `${sessionStats.solved} Solved · ${acc}% Acc · ${net} Net`;
+    }
+    function resetSessionStats() {
+      sessionStats = { solved: 0, right: 0, wrong: 0 };
+      totalMockSeconds = 0;
+      updateSessionPill();
+    }
+
+    // ==================== ⚡ 1-PASTE MAGIC MCQ PARSER ENGINE ====================
+    function parseMcqBlock(rawText) {
+      const text = String(rawText || '').trim();
+      if (!text) return null;
+
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      let stemLines = [];
+      let opts = ['', '', '', ''];
+      let correctIndex = 0;
+      let expLines = [];
+      let note = '';
+      let mode = 'stem';
+
+      lines.forEach(line => {
+        const clean = line.replace(/^\*\*|\*\*$/g, '').trim();
+
+        const optMatch = clean.match(/^(?:Option\s*)?([A-Da-d1-4])[\)\.\:\-]\s*(.+)$/i);
+        const ansMatch = clean.match(/^(?:Ans|Answer|Correct(?:\s*Answer)?|उत्तर)\s*[\:\-\=]\s*\(?([A-Da-d1-4])\)?/i);
+        const expMatch = clean.match(/^(?:Exp|Explanation|Solution|स्पष्टीकरण)\s*[\:\-]\s*(.*)$/i);
+        const noteMatch = clean.match(/^(?:Trick|Note|Shortcut|Hint|टीप|ट्रिक)\s*[\:\-]\s*(.*)$/i);
+
+        if (optMatch && mode !== 'exp') {
+          mode = 'opts';
+          const token = optMatch[1].toUpperCase();
+          const idx = ['A', 'B', 'C', 'D'].indexOf(token) >= 0 ? ['A', 'B', 'C', 'D'].indexOf(token) : (parseInt(token, 10) - 1);
+          if (idx >= 0 && idx < 4) opts[idx] = optMatch[2].trim();
+        } else if (ansMatch) {
+          mode = 'ans';
+          const token = ansMatch[1].toUpperCase();
+          const idx = ['A', 'B', 'C', 'D'].indexOf(token) >= 0 ? ['A', 'B', 'C', 'D'].indexOf(token) : (parseInt(token, 10) - 1);
+          if (idx >= 0 && idx < 4) correctIndex = idx;
+        } else if (expMatch) {
+          mode = 'exp';
+          if (expMatch[1].trim()) expLines.push(expMatch[1].trim());
+        } else if (noteMatch) {
+          note = noteMatch[1].trim();
+        } else {
+          if (mode === 'stem') {
+            stemLines.push(clean.replace(/^(?:Q|Question|प्रश्न|\d+)[\.\:\)]\s*/i, ''));
+          } else if (mode === 'exp') {
+            expLines.push(clean);
+          }
+        }
+      });
+
+      return {
+        stem: stemLines.join('\n').trim(),
+        options: opts,
+        correctIndex,
+        explanation: expLines.join('\n').trim(),
+        note
+      };
+    }
+
+    function handleMagicMcqPaste(raw) {
+      const parsed = parseMcqBlock(raw);
+      const fb = document.getElementById('magicMcqFeedback');
+      if (!parsed || !parsed.stem) {
+        fb.classList.add('hidden');
+        return;
+      }
+      document.getElementById('inputQStem').value = parsed.stem;
+      checkDuplicateQuestion(parsed.stem);
+      if (parsed.options[0]) document.getElementById('inputOptA').value = parsed.options[0];
+      if (parsed.options[1]) document.getElementById('inputOptB').value = parsed.options[1];
+      if (parsed.options[2]) document.getElementById('inputOptC').value = parsed.options[2];
+      if (parsed.options[3]) document.getElementById('inputOptD').value = parsed.options[3];
+
+      const radios = document.getElementsByName('correctOptRadio');
+      if (radios[parsed.correctIndex]) radios[parsed.correctIndex].checked = true;
+
+      if (parsed.explanation) document.getElementById('inputQExp').value = parsed.explanation;
+      if (parsed.note) document.getElementById('inputQNote').value = parsed.note;
+
+      const optCount = parsed.options.filter(Boolean).length;
+      fb.textContent = `✨ Auto-Split Ready: Question + ${optCount} Options + Answer (${['A','B','C','D'][parsed.correctIndex]})!`;
+      fb.classList.remove('hidden');
+    }
+
+    async function pasteFromClipboardIntoMcqMagic() {
+      const box = document.getElementById('magicMcqPasteInput');
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const txt = await navigator.clipboard.readText();
+          if (txt && txt.trim()) {
+            box.value = txt;
+            handleMagicMcqPaste(txt);
+            return;
+          }
+        }
+      } catch (e) {}
+      box.focus();
+      alert('Tap "Paste" on your iPad keyboard inside the highlighted Magic Paste box!');
+    }
+
+    function copyGsAiPromptTemplate() {
+      const promptText = `Convert my MPSC General Studies notes/topic into high-yield MCQs using this exact format (separate multiple questions with --- on its own line):
+Q: [Full question stem; use numbered lines 1. 2. for multi-statement questions]
+A) [Option A]
+B) [Option B]
+C) [Option C]
+D) [Option D]
+Ans: [A, B, C, or D]
+Exp: [Concise pointer explanation of the correct answer and other options]
+Note: [1-line shortcut or memory hook]`;
+
+      const ta = document.createElement('textarea');
+      ta.value = promptText;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(promptText).catch(() => {});
+      }
+      alert('✅ Copied GS MCQ AI Prompt! Paste it into Gemini/ChatGPT with your topic or notes.');
+    }
+
+    function checkDuplicateQuestion(stemVal) {
+      const banner = document.getElementById('dupQuestionBanner');
+      const editId = document.getElementById('editQuestionId').value;
+      const clean = String(stemVal || '').trim().toLowerCase().slice(0, 65);
+      if (clean.length < 12) { banner.classList.add('hidden'); return; }
+      const existing = appData.questions.find(q => q.id !== editId && q.stem.trim().toLowerCase().slice(0, 65) === clean);
+      if (existing) {
+        const fd = getFolderById(existing.folderId);
+        document.getElementById('dupQuestionText').textContent = `🚨 Already in "${fd ? fd.name : 'Folder'}"!`;
+        document.getElementById('btnLoadDupQuestion').onclick = () => openQuestionModal(existing.id);
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    // ==================== ADD / EDIT / BULK IMPORT QUESTIONS ====================
+    function populateFolderDropdown(selectId, defaultFolderId) {
+      const sel = document.getElementById(selectId); if (!sel) return;
+      const target = defaultFolderId || activeFolderId || appData.folders[0]?.id;
+      sel.innerHTML = appData.folders.map(f => {
+        const path = getBreadcrumbPath(f.id).map(p => `${p.icon || '📁'} ${p.name}`).join(' › ');
+        return `<option value="${f.id}" ${f.id === target ? 'selected' : ''}>${escapeHtml(path)}</option>`;
+      }).join('');
+    }
+
+    function toggleModalMemoryTag(t) {
+      if (modalMemoryTags.has(t)) modalMemoryTags.delete(t);
+      else modalMemoryTags.add(t);
+      updateModalMemoryTagButtons();
+    }
+    function updateModalMemoryTagButtons() {
+      ['Confused', 'Forget', 'Must'].forEach(t => {
+        const b = document.getElementById(`mTag-${t}`); if (!b) return;
+        b.className = modalMemoryTags.has(t)
+          ? 'py-1.5 rounded-xl btn-accent text-[10px] font-extrabold shadow'
+          : 'py-1.5 rounded-xl btn-soft text-[10px] font-extrabold';
+      });
+    }
+
+    function clearQuestionModalFields() {
+      document.getElementById('editQuestionId').value = '';
+      document.getElementById('magicMcqPasteInput').value = '';
+      document.getElementById('magicMcqFeedback').classList.add('hidden');
+      document.getElementById('dupQuestionBanner').classList.add('hidden');
+      document.getElementById('inputQStem').value = '';
+      document.getElementById('inputOptA').value = '';
+      document.getElementById('inputOptB').value = '';
+      document.getElementById('inputOptC').value = '';
+      document.getElementById('inputOptD').value = '';
+      document.getElementById('inputQExp').value = '';
+      document.getElementById('inputQNote').value = '';
+      document.getElementsByName('correctOptRadio')[0].checked = true;
+      modalMemoryTags = new Set();
+      updateModalMemoryTagButtons();
+    }
+
+    function openQuestionModal(qid = null, forceFolderId = null) {
+      const q = qid ? appData.questions.find(x => x.id === qid) : null;
+      const targetFid = q ? q.folderId : (forceFolderId || activeFolderId);
+      populateFolderDropdown('inputQFolderSelect', targetFid);
+      clearQuestionModalFields();
+
+      document.getElementById('questionModalTitle').textContent = q ? 'Edit GS Mock Question' : 'Add GS Mock Question';
+      document.getElementById('qSavedToast').classList.add('hidden');
+
+      if (q) {
+        document.getElementById('editQuestionId').value = q.id;
+        document.getElementById('inputQExamTag').value = q.examTag || 'MPSC PYQ';
+        document.getElementById('inputQStem').value = q.stem || '';
+        document.getElementById('inputOptA').value = q.options[0] || '';
+        document.getElementById('inputOptB').value = q.options[1] || '';
+        document.getElementById('inputOptC').value = q.options[2] || '';
+        document.getElementById('inputOptD').value = q.options[3] || '';
+        document.getElementById('inputQExp').value = q.explanation || '';
+        document.getElementById('inputQNote').value = q.note || '';
+        const radios = document.getElementsByName('correctOptRadio');
+        if (radios[q.correctIndex || 0]) radios[q.correctIndex || 0].checked = true;
+        modalMemoryTags = new Set(q.tags || []);
+        updateModalMemoryTagButtons();
+      }
+      openModal('questionModal');
+    }
+
+    function editCurrentQuestion() {
+      const pool = getActiveQuestionPool();
+      if (pool.length) openQuestionModal(pool[currentQIndex].id);
+    }
+
+    function saveQuestionModal(keepOpen = false) {
+      const stem = document.getElementById('inputQStem').value.trim();
+      const optA = document.getElementById('inputOptA').value.trim();
+      const optB = document.getElementById('inputOptB').value.trim();
+      const optC = document.getElementById('inputOptC').value.trim();
+      const optD = document.getElementById('inputOptD').value.trim();
+      const exp  = document.getElementById('inputQExp').value.trim();
+      const note = document.getElementById('inputQNote').value.trim();
+      const examTag = document.getElementById('inputQExamTag').value.trim() || 'MPSC PYQ';
+      const folderId = document.getElementById('inputQFolderSelect').value || activeFolderId;
+      const editId = document.getElementById('editQuestionId').value;
+
+      if (!stem || !optA || !optB) {
+        alert('Please enter the Question Stem and at least Options A and B!');
+        return;
+      }
+
+      let correctIndex = 0;
+      const radios = document.getElementsByName('correctOptRadio');
+      for (let i = 0; i < radios.length; i++) {
+        if (radios[i].checked) { correctIndex = i; break; }
+      }
+
+      if (editId) {
+        const q = appData.questions.find(x => x.id === editId);
+        if (q) {
+          q.folderId = folderId; q.examTag = examTag; q.stem = stem;
+          q.options = [optA, optB, optC || 'None of the above', optD || 'All of the above'];
+          q.correctIndex = correctIndex; q.explanation = exp; q.note = note;
+          q.tags = Array.from(modalMemoryTags);
+        }
+      } else {
+        appData.questions.push({
+          id: 'q-' + Date.now(), folderId, examTag, stem,
+          options: [optA, optB, optC || 'None of the above', optD || 'All of the above'],
+          correctIndex, explanation: exp, note,
+          tags: Array.from(modalMemoryTags),
+          mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+        });
+        activeFolderId = folderId;
+      }
+
+      saveToStorage();
+      renderAll();
+
+      if (keepOpen) {
+        clearQuestionModalFields();
+        const toast = document.getElementById('qSavedToast');
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 2200);
+        document.getElementById('magicMcqPasteInput').focus();
+      } else {
+        closeModal('questionModal');
+      }
+    }
+
+    function openBulkModal(forceFid = null) {
+      populateFolderDropdown('bulkTargetFolderSelect', forceFid || activeFolderId);
+      document.getElementById('bulkPreviewBanner').classList.add('hidden');
+      openModal('bulkModal');
+    }
+
+    function previewBulkMcqCount() {
+      const raw = document.getElementById('bulkImportText').value.trim();
+      const banner = document.getElementById('bulkPreviewBanner');
+      if (!raw) { banner.classList.add('hidden'); return; }
+      const blocks = raw.includes('---') ? raw.split(/\n\s*---+\s*\n/) : raw.split(/\n(?=Q[\:\.\)]|Question[\:\.])/i);
+      const valid = blocks.filter(b => b.trim().length > 15).length;
+      banner.textContent = `✨ Live Preview: ${valid} MCQ(s) detected and ready to import!`;
+      banner.classList.remove('hidden');
+    }
+
+    function processBulkMcqImport() {
+      const raw = document.getElementById('bulkImportText').value.trim();
+      const targetFid = document.getElementById('bulkTargetFolderSelect').value || activeFolderId;
+      if (!raw) return;
+
+      const blocks = raw.includes('---') ? raw.split(/\n\s*---+\s*\n/) : raw.split(/\n(?=Q[\:\.\)]|Question[\:\.])/i);
+      let added = 0;
+
+      blocks.forEach((b, idx) => {
+        const parsed = parseMcqBlock(b);
+        if (parsed && parsed.stem && parsed.options[0] && parsed.options[1]) {
+          appData.questions.push({
+            id: `imp-${Date.now()}-${idx}`,
+            folderId: targetFid,
+            examTag: 'MPSC Practice',
+            stem: parsed.stem,
+            options: [parsed.options[0], parsed.options[1], parsed.options[2] || 'Both 1 and 2', parsed.options[3] || 'Neither 1 nor 2'],
+            correctIndex: parsed.correctIndex,
+            explanation: parsed.explanation || '',
+            note: parsed.note || '',
+            tags: [], mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+          });
+          added++;
+        }
+      });
+
+      activeFolderId = targetFid;
+      specialFilter = '';
+      document.getElementById('bulkImportText').value = '';
+      closeModal('bulkModal');
+      saveToStorage();
+      renderAll();
+      alert(`✅ Imported ${added} MCQs into chapter!`);
+    }
+
+    // ==================== QUESTION BANK TABLE & BULK MANAGER ====================
+    function renderQuestionBankList() {
+      const pool = getActiveQuestionPool();
+      document.getElementById('questionTableCount').textContent = pool.length;
+      const el = document.getElementById('questionBankList');
+      const loadMoreWrap = document.getElementById('loadMoreQuestionsWrap');
+      const bulkBar = document.getElementById('bulkActionToolbar');
+
+      bulkBar.classList.toggle('hidden', selectedQuestionIds.size === 0);
+      if (selectedQuestionIds.size > 0) {
+        document.getElementById('selectedQuestionsCount').textContent = selectedQuestionIds.size;
+        populateFolderDropdown('bulkMoveTargetSelect', activeFolderId);
+      }
+
+      if (!pool.length) {
+        el.innerHTML = `<div class="text-center py-6 text-xs text-sub">No questions in this scope.</div>`;
+        loadMoreWrap.classList.add('hidden');
+        return;
+      }
+
+      const slice = pool.slice(0, listRenderLimit);
+      loadMoreWrap.classList.toggle('hidden', pool.length <= listRenderLimit);
+      if (pool.length > listRenderLimit) {
+        document.getElementById('btnLoadMoreQuestions').textContent = `⬇ Show More (Showing ${slice.length} of ${pool.length})`;
+      }
+
+      const letters = ['A', 'B', 'C', 'D'];
+      el.innerHTML = slice.map((q, i) => {
+        const fd = getFolderById(q.folderId);
+        const checked = selectedQuestionIds.has(q.id) ? 'checked' : '';
+        return `<div class="p-3 rounded-2xl sub-box flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <input type="checkbox" ${checked} onchange="toggleSelectQuestion('${q.id}', this.checked)" class="rounded w-4 h-4 accent-indigo-600 shrink-0" />
+            <div class="truncate">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-xs font-extrabold text-indigo-400">Q${i + 1}.</span>
+                <span class="font-bold text-xs sm:text-sm text-main truncate">${escapeHtml(q.stem)}</span>
+              </div>
+              <div class="text-[11px] text-sub truncate mt-0.5">
+                <strong class="text-emerald-400">Ans: (${letters[q.correctIndex]}) ${escapeHtml(q.options[q.correctIndex])}</strong>
+                · ${fd ? escapeHtml(fd.name) : ''}
+                ${q.mistakeCount ? `· <span class="text-rose-400 font-bold">❌ Missed ${q.mistakeCount}x</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button type="button" onclick="openQuestionModal('${q.id}')" class="px-2.5 py-1 rounded-lg btn-soft text-xs font-bold">✎</button>
+            <button type="button" onclick="deleteQuestionById('${q.id}')" class="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-500 text-xs font-bold">🗑</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function loadMoreBankQuestions() { listRenderLimit += 50; renderQuestionBankList(); }
+    function toggleSelectQuestion(id, ch) { if (ch) selectedQuestionIds.add(id); else selectedQuestionIds.delete(id); renderQuestionBankList(); }
+    function toggleSelectAllQuestions(ch) { const pool = getActiveQuestionPool(); if (ch) pool.forEach(q => selectedQuestionIds.add(q.id)); else selectedQuestionIds.clear(); renderQuestionBankList(); }
+    function moveSelectedQuestionsToFolder() {
+      const targetFid = document.getElementById('bulkMoveTargetSelect').value; if (!targetFid) return;
+      appData.questions.forEach(q => { if (selectedQuestionIds.has(q.id)) q.folderId = targetFid; });
+      selectedQuestionIds.clear(); document.getElementById('selectAllQuestionsCheck').checked = false; saveToStorage(); renderAll();
+    }
+    function deleteSelectedQuestions() {
+      if (!confirm(`Delete ${selectedQuestionIds.size} selected questions?`)) return;
+      appData.questions = appData.questions.filter(q => !selectedQuestionIds.has(q.id));
+      selectedQuestionIds.clear(); document.getElementById('selectAllQuestionsCheck').checked = false; saveToStorage(); renderAll();
+    }
+    function deleteQuestionById(id) {
+      if (confirm('Delete this question?')) {
+        appData.questions = appData.questions.filter(q => q.id !== id);
+        saveToStorage();
+        renderAll();
+      }
+    }
+
+    // ==================== FOLDER CRUD MODALS ====================
+    function openFolderModal(pid = null) {
+      document.getElementById('folderEditModeInput').value = 'create';
+      document.getElementById('folderParentIdInput').value = pid || '';
+      document.getElementById('inputFolderName').value = '';
+      const p = pid ? getFolderById(pid) : null;
+      document.getElementById('folderModalTitle').textContent = p ? 'Create Subfolder / Chapter' : 'Create Main Subject Folder';
+      document.getElementById('folderParentNotice').textContent = p ? `Creating inside: ${p.icon || '📁'} ${p.name}` : 'Creating Top-Level GS Subject';
+      openModal('folderModal');
+    }
+
+    function openRenameFolderModal() {
+      const f = getFolderById(activeFolderId); if (!f) return;
+      document.getElementById('folderEditModeInput').value = 'rename';
+      document.getElementById('inputFolderName').value = f.name;
+      document.getElementById('inputFolderIcon').value = f.icon || '📂';
+      document.getElementById('folderModalTitle').textContent = 'Rename Subject / Chapter';
+      document.getElementById('folderParentNotice').textContent = `Editing: ${f.name}`;
+      openModal('folderModal');
+    }
+
+    function saveFolderModal() {
+      const name = document.getElementById('inputFolderName').value.trim();
+      const icon = document.getElementById('inputFolderIcon').value || '📂';
+      if (!name) return;
+      if (document.getElementById('folderEditModeInput').value === 'rename') {
+        const f = getFolderById(activeFolderId);
+        if (f) { f.name = name; f.icon = icon; }
+      } else {
+        const pid = document.getElementById('folderParentIdInput').value || null;
+        if (pid) collapsedFolders.delete(pid);
+        const nf = { id: 'f-' + Date.now(), name, icon, parentId: pid };
+        appData.folders.push(nf);
+        activeFolderId = nf.id;
+      }
+      closeModal('folderModal');
+      saveToStorage();
+      renderAll();
+    }
+
+    function deleteActiveFolder() {
+      if (appData.folders.length <= 1) { alert('Keep at least 1 folder.'); return; }
+      const f = getFolderById(activeFolderId);
+      if (!f || !confirm(`Delete "${f.name}" and all chapters/questions inside it?`)) return;
+      const ids = getDescendantFolderIds(activeFolderId);
+      appData.folders = appData.folders.filter(x => !ids.includes(x.id));
+      appData.questions = appData.questions.filter(q => !ids.includes(q.folderId));
+      activeFolderId = f.parentId || appData.folders[0]?.id;
+      saveToStorage();
+      renderAll();
+    }
+
+    function toggleIncludeSubfolders() {
+      includeSubfolders = document.getElementById('includeSubfoldersToggle').checked;
+      currentQIndex = 0;
+      renderAll();
+    }
+
+    // ==================== 🖨️ 2-COLUMN A4 PRINTABLE EXPORTER ====================
+    function printCurrentScopeA4() {
+      const pool = getActiveQuestionPool();
+      if (!pool.length) { alert('No questions in current scope to print!'); return; }
+      const folder = getFolderById(activeFolderId);
+      document.getElementById('printHeaderTitle').textContent = specialFilter
+        ? `GS Revision Vault (${specialFilter}) — A4 Sheet`
+        : `${folder ? folder.name : 'GS Chapter'} — A4 PYQ Sheet`;
+      document.getElementById('printHeaderSub').textContent = `${pool.length} Questions · MPSC Group B High-Density Printout`;
+
+      const letters = ['A', 'B', 'C', 'D'];
+      document.getElementById('printGridBody').innerHTML = pool.map((q, idx) => `
+        <div class="print-q">
+          <div style="font-weight:800; margin-bottom:3px; white-space:pre-line;">Q${idx + 1}. ${escapeHtml(q.stem)}</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px 8px; margin-bottom:4px; color:#1e293b;">
+            ${q.options.map((o, oi) => `<div>(${letters[oi]}) ${escapeHtml(o)}</div>`).join('')}
+          </div>
+          <div style="border-top:1px dotted #94a3b8; padding-top:2px; font-size:9.5px;">
+            <strong>Ans: (${letters[q.correctIndex]})</strong> ${escapeHtml(q.explanation || '')}
+            ${q.note ? `<br/><strong>📝 Trick:</strong> ${escapeHtml(q.note)}` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      window.print();
+    }
+
+    // ==================== GEMINI AI ENGINE (DEEP EXPLAIN, TWIST PYQ & BATCH GEN) ====================
+    async function callGeminiSmart(promptText, overrideKey = null) {
+      const apiKey = (overrideKey || localStorage.getItem(AI_KEY_STORAGE) || '').trim();
+      if (!apiKey) throw new Error('NO_KEY');
+      const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      let lastErr = 'Check API Key';
+      for (const m of models) {
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+          });
+          const data = await res.json();
+          if (res.ok && data?.candidates?.[0]?.content?.parts?.[0]?.text) return { text: data.candidates[0].content.parts[0].text, model: m };
+          if (data?.error?.message) lastErr = data.error.message;
+        } catch (err) { lastErr = err.message; }
+      }
+      throw new Error(lastErr);
+    }
+
+    function saveAiApiKey() { localStorage.setItem(AI_KEY_STORAGE, document.getElementById('inputGeminiApiKey').value.trim()); closeModal('aiModal'); }
+    async function testGeminiKey() {
+      const key = document.getElementById('inputGeminiApiKey').value.trim(), st = document.getElementById('aiKeyTestStatus');
+      st.classList.remove('hidden');
+      if (!key) { st.className = 'p-2.5 rounded-xl text-xs bg-rose-500/20 text-rose-400'; st.textContent = 'Paste key first.'; return; }
+      st.className = 'p-2.5 rounded-xl text-xs bg-violet-500/20 text-violet-400'; st.textContent = '⚡ Testing...';
+      try {
+        const res = await callGeminiSmart('Say OK', key);
+        localStorage.setItem(AI_KEY_STORAGE, key);
+        st.className = 'p-2.5 rounded-xl text-xs bg-emerald-500/20 text-emerald-500'; st.textContent = `✅ Connected (${res.model})!`;
+      } catch (e) { st.className = 'p-2.5 rounded-xl text-xs bg-rose-500/20 text-rose-400'; st.textContent = `❌ Error: ${e.message}`; }
+    }
+
+    async function aiExplainCurrentQuestion() {
+      const pool = getActiveQuestionPool(); if (!pool.length) return;
+      const q = pool[currentQIndex];
+      const box = document.getElementById('qAiOutputBox');
+      box.classList.remove('hidden');
+      if (!localStorage.getItem(AI_KEY_STORAGE)) { openModal('aiModal'); return; }
+      box.textContent = '✨ Gemini AI generating topper-style micro-notes for this question...';
+      try {
+        const prompt = `Explain this MPSC Group B question in crisp, pointer-based English (with Marathi hook if helpful). Include exact dates/articles and why the other options are wrong:\nQuestion: ${q.stem}\nOptions: ${q.options.join(' | ')}\nCorrect: ${q.options[q.correctIndex]}`;
+        const res = await callGeminiSmart(prompt);
+        box.textContent = res.text;
+      } catch (e) { box.textContent = 'AI Error: ' + e.message; }
+    }
+
+    async function aiTwistCurrentQuestion() {
+      const pool = getActiveQuestionPool(); if (!pool.length) return;
+      const q = pool[currentQIndex];
+      const box = document.getElementById('qAiOutputBox');
+      box.classList.remove('hidden');
+      if (!localStorage.getItem(AI_KEY_STORAGE)) { openModal('aiModal'); return; }
+      box.textContent = '🔄 Gemini AI is twisting this PYQ into a harder multi-statement MPSC question...';
+      try {
+        const prompt = `Based on this MPSC question:\n"${q.stem}" (${q.explanation})\nFrame 1 brand-new, harder multi-statement MPSC Group B MCQ testing the same topic from a new angle. Return ONLY valid JSON (no markdown fences):\n{"stem":"Consider the following statements:\\n1. ...\\n2. ...\\nWhich of the statements given above is/are correct?","options":["1 only","2 only","Both 1 and 2","Neither 1 nor 2"],"correctIndex":0,"explanation":"...","note":"..."}`;
+        const res = await callGeminiSmart(prompt);
+        const obj = JSON.parse(res.text.replace(/```json|```/gi, '').trim());
+        if (obj && obj.stem && Array.isArray(obj.options)) {
+          const newId = 'twist-' + Date.now();
+          appData.questions.push({
+            id: newId, folderId: q.folderId, examTag: '✨ AI Twisted PYQ',
+            stem: obj.stem, options: obj.options.slice(0, 4),
+            correctIndex: Number(obj.correctIndex) || 0,
+            explanation: obj.explanation || '', note: obj.note || '',
+            tags: ['Must'], mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+          });
+          saveToStorage();
+          box.innerHTML = `<div class="font-extrabold text-emerald-400 mb-1">✅ New Twisted Question Added to Chapter!</div><div>${escapeHtml(obj.stem)}</div><button type="button" onclick="jumpToQuestionById('${newId}')" class="mt-2 px-3 py-1 rounded-lg btn-accent font-extrabold text-xs">Solve Twisted Question Now →</button>`;
+          renderFolderTreesOnly();
+        }
+      } catch (e) { box.textContent = 'AI Twist Error: ' + e.message; }
+    }
+
+    function openAiGenModal(forceFid = null) {
+      populateFolderDropdown('aiGenFolderSelect', forceFid || activeFolderId);
+      openModal('aiGenModal');
+    }
+
+    async function generateGsQuestionsWithAi() {
+      const topic = document.getElementById('aiGenTopicInput').value.trim();
+      const count = document.getElementById('aiGenCountSelect').value;
+      const targetFid = document.getElementById('aiGenFolderSelect').value || activeFolderId;
+      const st = document.getElementById('aiGenStatus');
+      if (!topic) return;
+      if (!localStorage.getItem(AI_KEY_STORAGE)) { openModal('aiModal'); return; }
+
+      st.classList.remove('hidden');
+      st.className = 'p-2.5 rounded-xl text-xs bg-fuchsia-500/20 text-fuchsia-300 font-bold';
+      st.textContent = `✨ Framing ${count} MPSC Group B MCQs on "${topic}"...`;
+
+      try {
+        const prompt = `You are a senior MPSC Group B (STI/PSI/Sub-Registrar) paper setter.
+Create ${count} high-yield MCQs on: "${topic}". Mix multi-statement questions (1., 2.) and direct factual PYQ-style questions.
+Return ONLY a valid JSON array (no markdown fences) where each object has:
+{"stem":"Question stem","options":["Opt A","Opt B","Opt C","Opt D"],"correctIndex":0,"explanation":"Detailed pointer explanation","note":"Short memory trick"}`;
+
+        const res = await callGeminiSmart(prompt);
+        const arr = JSON.parse(res.text.replace(/```json|```/gi, '').trim());
+        let added = 0;
+        if (Array.isArray(arr)) {
+          arr.forEach((item, i) => {
+            if (item.stem && Array.isArray(item.options) && item.options.length >= 2) {
+              appData.questions.push({
+                id: `ai-${Date.now()}-${i}`, folderId: targetFid, examTag: '✨ AI MPSC Mock',
+                stem: String(item.stem),
+                options: [String(item.options[0] || ''), String(item.options[1] || ''), String(item.options[2] || 'Both 1 and 2'), String(item.options[3] || 'Neither 1 nor 2')],
+                correctIndex: Number(item.correctIndex) || 0,
+                explanation: String(item.explanation || ''),
+                note: String(item.note || ''),
+                tags: [], mistakeCount: 0, correctStreak: 0, selectedOption: null, eliminated: [], confidence: null, markedReview: false, timeSpent: 0
+              });
+              added++;
+            }
+          });
+        }
+        activeFolderId = targetFid;
+        specialFilter = '';
+        saveToStorage();
+        renderAll();
+        st.className = 'p-2.5 rounded-xl text-xs bg-emerald-500/20 text-emerald-400 font-extrabold';
+        st.textContent = `✅ Added ${added} MPSC MCQs!`;
+        setTimeout(() => { closeModal('aiGenModal'); st.classList.add('hidden'); }, 900);
+      } catch (e) {
+        st.className = 'p-2.5 rounded-xl text-xs bg-rose-500/20 text-rose-400 font-bold';
+        st.textContent = `Error: ${e.message}`;
+      }
+    }
+
+    // ==================== TIMERS, THEMES & BACKUP ====================
+    setInterval(() => {
+      if (simulatorMode === 'list' || omrSubmitted) return;
+      const pool = getActiveQuestionPool();
+      if (!pool.length) return;
+      const q = pool[currentQIndex];
+      if (q) {
+        q.timeSpent = (q.timeSpent || 0) + 1;
+        const el = document.getElementById('qStopwatchDisplay');
+        if (el) el.textContent = `${q.timeSpent}s`;
+      }
+      totalMockSeconds++;
+      const tEl = document.getElementById('totalMockTimerDisplay');
+      if (tEl) {
+        tEl.textContent = `${String(Math.floor(totalMockSeconds / 60)).padStart(2, '0')}:${String(totalMockSeconds % 60).padStart(2, '0')}`;
+      }
+    }, 1000);
+
+    const THEMES = ['aurora', 'daylight', 'matcha'];
+    const THEME_LABELS = { aurora: '🌌 Aurora', daylight: '☀️ Daylight', matcha: '☕ Matcha' };
+    let currentTheme = localStorage.getItem(THEME_KEY) || 'aurora';
+    if (!THEMES.includes(currentTheme)) currentTheme = 'aurora';
+    function applyTheme(t) {
+      currentTheme = t; localStorage.setItem(THEME_KEY, t);
+      document.documentElement.className = `theme-${t}`;
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) btn.textContent = THEME_LABELS[t];
+    }
+    function cycleTheme() { applyTheme(THEMES[(THEMES.indexOf(currentTheme) + 1) % THEMES.length]); }
+
+    function toggleMobileSidebar() {
+      const b = document.getElementById('mobileSidebarBackdrop'), d = document.getElementById('mobileSidebarDrawer'), h = !b.classList.contains('hidden');
+      b.classList.toggle('hidden', h); d.classList.toggle('-translate-x-full', h);
+    }
+    function closeMobileSidebar() {
+      document.getElementById('mobileSidebarBackdrop').classList.add('hidden');
+      document.getElementById('mobileSidebarDrawer').classList.add('-translate-x-full');
+    }
+
+    function exportBackupJson() {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' }));
+      a.download = `GS_MockPro_Backup.json`;
+      a.click();
+    }
+    function importBackupJson(e) {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        try {
+          const imp = JSON.parse(ev.target.result);
+          if (imp.folders && imp.questions) {
+            appData = imp; activeFolderId = appData.folders[0]?.id;
+            saveToStorage(); renderAll(); closeModal('backupModal'); alert('✅ Restored GS Question Bank!');
+          }
+        } catch (err) { alert('Invalid backup file.'); }
+      };
+      r.readAsText(f);
+    }
+    function resetToDefaultData() {
+      if (confirm('Reload default MPSC Group B Syllabus & sample PYQs?')) {
+        appData = JSON.parse(JSON.stringify(DEFAULT_GS_DATA));
+        activeFolderId = 'f-his-mh';
+        saveToStorage(); renderAll(); closeModal('backupModal');
+      }
+    }
+
+    function openModal(id) {
+      if (id === 'aiModal') {
+        document.getElementById('inputGeminiApiKey').value = localStorage.getItem(AI_KEY_STORAGE) || '';
+        document.getElementById('aiKeyTestStatus').classList.add('hidden');
+      }
+      document.getElementById(id).classList.remove('hidden');
+    }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function clearPyqSearch() {
+      document.getElementById('pyqSearchInput').value = '';
+      searchQuery = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderAll();
+    }
+
+    document.getElementById('pyqSearchInput').addEventListener('input', e => {
+      const val = e.target.value;
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', !val);
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        searchQuery = val;
+        currentQIndex = 0;
+        renderAll();
+      }, 150);
+    });
+
+    applyTheme(currentTheme);
+    renderAll();
+  </script>
+</body>
+</html>
